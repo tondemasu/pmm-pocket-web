@@ -1,7 +1,7 @@
 'use strict';
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
-const APP_VERSION = 'PMM Pocket Web v0.2 beta';
+const APP_VERSION = 'PMM Pocket Web v003';
 const state = { data:null, fileName:'pmm_data.json', fileHandle:null, dirty:false, edit:{type:null,id:null,index:null}, photoTarget:null, crop:{img:null,scale:1,rotation:0,dx:0,dy:0,drag:false,lastX:0,lastY:0} };
 const typeLabels = ['P','PS','K','KS','K（要フォロー）','KS（要フォロー）'];
 const titleOptions = ['','ONE','GM','PM','ECM','DCM','PDCM'];
@@ -36,7 +36,20 @@ async function writeJson(){if(!state.data){toast('データがありません');
   }
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=state.fileName||'pmm_data.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),5000); markDirty(false); toast('書き出しました')
 }
-function renderAll(){renderSelf();renderOther();renderPending();}
+function renderAll(){renderSelf();renderOther();renderPending(); updateHomeCounts();}
+
+function updateHomeCounts(){
+  const selfEl=$('#homeSelfCount'), otherEl=$('#homeOtherCount');
+  if(selfEl) selfEl.textContent = ($('#selfCount')?.textContent||'0件').replace('件','') || '0';
+  if(otherEl) otherEl.textContent = ($('#otherCount')?.textContent||'0件').replace('件','') || '0';
+}
+function switchTab(name){
+  $$('.bottom-tab').forEach(x=>x.classList.toggle('active', x.dataset.tab===name));
+  $$('.tab-view').forEach(v=>v.classList.remove('active'));
+  const target = $('#tab-'+name); if(target) target.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
 function makeAvatar(b64,name,large=false){const src=photoSrc(b64); if(src){return `<img class="avatar ${large?'large':''}" src="${src}" alt="" data-preview="${escapeHtml(src)}">`} return `<div class="avatar ${large?'large':''}">${escapeHtml((name||'?').slice(0,1))}</div>`}
 function typeTag(t){const cls=String(t||'').toLowerCase().replace(/[（）]/g,'');return `<span class="tag ${cls}">${escapeHtml(t||'-')}</span>`}
 function searchText(obj,keys){return keys.map(k=>obj?.[k]||'').join(' ').toLowerCase()}
@@ -82,9 +95,9 @@ function showInfo(kind){const help=`<p><strong>使い方</strong></p><ol><li>PMM
 function init(){ if(localStorage.getItem('pmmPocketDark')==='1')document.body.classList.add('dark'); $('#darkToggle').onclick=()=>{document.body.classList.toggle('dark');localStorage.setItem('pmmPocketDark',document.body.classList.contains('dark')?'1':'0')};
  ['fileInput','fileInput2'].forEach(id=>{$('#'+id).onchange=e=>{const f=e.target.files[0]; if(!f)return; alert('保存ファイルの読み込み\n\nPMM本体とPMM Pocket Webで同じ保存ファイルを同時に開くと 上書き事故の原因になります。\n\nPMM本体を閉じてから読み込んでください。'); readJsonFile(f); e.target.value='';}});
  $('#newDataBtn').onclick=()=>{state.data=emptyData();state.fileName='pmm_data.json';$('#loadedName').textContent=state.fileName;$('#startView').classList.add('hidden');$('#mainView').classList.remove('hidden');renderAll();markDirty(false)}; $('#saveBtn').onclick=writeJson;
- $$('.tab').forEach(b=>b.onclick=()=>{$$('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');$$('.tab-view').forEach(v=>v.classList.remove('active'));$('#tab-'+b.dataset.tab).classList.add('active')});
+ $$('.bottom-tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
  $('#selfSearch').oninput=renderSelf; $('#otherSearch').oninput=renderOther; $('#pendingSearch').oninput=renderPending; $('#otherAddBtn').onclick=()=>openEdit('other-new'); $('#pendingAddBtn').onclick=()=>openEdit('pending-new');
- document.body.addEventListener('click',e=>{const p=e.target.closest('[data-preview]'); if(p) preview(p.dataset.preview); const s=e.target.closest('[data-edit-self]'); if(s)openEdit('self',s.dataset.editSelf); const o=e.target.closest('[data-edit-other]'); if(o)openEdit('other',o.dataset.editOther); const pn=e.target.closest('[data-edit-pending]'); if(pn)openEdit('pending',pn.dataset.editPending); const l=e.target.closest('[data-dialog]'); if(l)showInfo(l.dataset.dialog);});
+ document.body.addEventListener('click',e=>{const p=e.target.closest('[data-preview]'); if(p) preview(p.dataset.preview); const s=e.target.closest('[data-edit-self]'); if(s)openEdit('self',s.dataset.editSelf); const o=e.target.closest('[data-edit-other]'); if(o)openEdit('other',o.dataset.editOther); const pn=e.target.closest('[data-edit-pending]'); if(pn)openEdit('pending',pn.dataset.editPending); const j=e.target.closest('[data-tab-jump]'); if(j)switchTab(j.dataset.tabJump); const l=e.target.closest('[data-dialog]'); if(l)showInfo(l.dataset.dialog);});
  $('#closeEditBtn').onclick=()=>$('#editDialog').close(); $('#editSaveBtn').onclick=saveEdit; $('#deleteBtn').onclick=deleteEdit; $('#closeInfoBtn').onclick=()=>$('#infoDialog').close(); $('#closePreviewBtn').onclick=()=>$('#previewDialog').close();
  document.addEventListener('click',e=>{ if(e.target?.id==='photoEditBtn')openPhoto(); if(e.target?.id==='photoRemoveBtn'){setCurrentPhoto(''); $('#editDialog').close(); toast('写真を削除しました')}});
  $('#closePhotoBtn').onclick=()=>$('#photoDialog').close(); $('#photoFileInput').onchange=e=>loadCropFile(e.target.files[0]); $('#photoCameraInput').onchange=e=>loadCropFile(e.target.files[0]); $('#rotatePhotoBtn').onclick=()=>{state.crop.rotation=(state.crop.rotation+90)%360;drawCrop()}; $('#clearPhotoBtn').onclick=()=>{setCurrentPhoto('');$('#photoDialog').close();$('#editDialog').close();toast('写真を削除しました')}; $('#applyPhotoBtn').onclick=applyPhoto; $('#zoomRange').oninput=e=>{state.crop.scale=Number(e.target.value);drawCrop()};

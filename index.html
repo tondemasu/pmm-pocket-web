@@ -15,7 +15,7 @@
         <img src="assets/icon-192.png" alt="PMM" class="brand-icon">
         <div>
           <div class="brand-title">PMM Pocket Web</div>
-          <div class="brand-sub">PMM JSON 連携版</div>
+          <div class="brand-sub">PMMスマホ版 v003</div>
         </div>
       </div>
       <button id="darkToggle" class="ghost-btn" type="button">ダーク</button>
@@ -26,6 +26,7 @@
         <div class="start-brand">
           <img src="assets/icon-192.png" alt="PMM" class="start-icon">
           <h1>PMM Pocket Web</h1>
+          <div class="start-version">PMMスマホ版 v003</div>
         </div>
         <p class="notice">
           PMM本体とWeb版で同じ保存ファイルを同時に編集すると 上書き事故の原因になります<br>
@@ -45,25 +46,47 @@
       </section>
 
       <section id="mainView" class="hidden">
-        <div class="toolbar panel">
-          <div class="file-info">
-            <strong id="loadedName">未読込</strong>
-            <span id="dirtyMark"></span>
+        <section id="tab-home" class="tab-view active">
+          <div class="home-card panel">
+            <div class="brand compact-brand">
+              <img src="assets/icon-192.png" alt="PMM" class="brand-icon">
+              <div>
+                <div class="brand-title">PMM Pocket Web</div>
+                <div class="brand-sub">PMMスマホ版 v003</div>
+              </div>
+            </div>
+            <p class="notice small-notice">PMM本体を閉じてから使ってください</p>
+            <div class="file-info centered">
+              <strong id="loadedName">未読込</strong>
+              <span id="dirtyMark"></span>
+            </div>
+            <div class="toolbar-actions centered-actions">
+              <label class="secondary-btn small file-label">再読込<input id="fileInput2" type="file" accept="application/json,.json" hidden></label>
+              <button id="saveBtn" class="primary-btn small" type="button">JSON書き出し</button>
+            </div>
           </div>
-          <div class="toolbar-actions">
-            <label class="secondary-btn small file-label">再読込<input id="fileInput2" type="file" accept="application/json,.json" hidden></label>
-            <button id="saveBtn" class="primary-btn small" type="button">JSON書き出し</button>
+
+          <div class="home-grid">
+            <button class="home-nav-card panel" type="button" data-tab-jump="self">
+              <span>自メンバーへ</span>
+              <strong id="homeSelfCount">0</strong>
+            </button>
+            <button class="home-nav-card panel" type="button" data-tab-jump="other">
+              <span>他メンバーへ</span>
+              <strong id="homeOtherCount">0</strong>
+            </button>
           </div>
-        </div>
+        </section>
 
-        <nav class="tabs" role="tablist">
-          <button class="tab active" data-tab="self">自メンバー</button>
-          <button class="tab" data-tab="other">他メンバー</button>
-          <button class="tab" data-tab="pending">新メンバー</button>
-        </nav>
-
-        <section id="tab-self" class="tab-view active">
+        <section id="tab-self" class="tab-view">
           <div class="section-head">
+            <h2>新メンバー仮登録 <span id="pendingCount" class="count"></span></h2>
+            <button id="pendingAddBtn" class="primary-btn small" type="button">追加</button>
+          </div>
+          <input id="pendingSearch" class="search wide" type="search" placeholder="名前 紹介者 地域 メモで検索">
+          <div id="pendingList" class="card-list pending-top"></div>
+
+          <div class="section-head self-head">
             <h2>自メンバー活動管理 <span id="selfCount" class="count"></span></h2>
             <input id="selfSearch" class="search" type="search" placeholder="名前 地域 タイトル メモで検索">
           </div>
@@ -79,14 +102,11 @@
           <div id="otherList" class="card-list"></div>
         </section>
 
-        <section id="tab-pending" class="tab-view">
-          <div class="section-head">
-            <h2>新メンバー仮登録 <span id="pendingCount" class="count"></span></h2>
-            <button id="pendingAddBtn" class="primary-btn small" type="button">追加</button>
-          </div>
-          <input id="pendingSearch" class="search wide" type="search" placeholder="名前 紹介者 地域 メモで検索">
-          <div id="pendingList" class="card-list"></div>
-        </section>
+        <nav class="bottom-tabs" role="tablist" aria-label="画面切替">
+          <button class="bottom-tab active" data-tab="home">トップ</button>
+          <button class="bottom-tab" data-tab="self">自メンバー</button>
+          <button class="bottom-tab" data-tab="other">他メンバー</button>
+        </nav>
       </section>
     </main>
   </div>
