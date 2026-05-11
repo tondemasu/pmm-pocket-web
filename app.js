@@ -1,7 +1,7 @@
 'use strict';
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
-const APP_VERSION = 'PMM Pocket Web v009';
+const APP_VERSION = 'PMM Pocket Web v010';
 const state = { data:null, fileName:'pmm_data.json', fileHandle:null, dirty:false, edit:{type:null,id:null,index:null}, previewTarget:null, photoTarget:null, crop:{img:null,scale:1,rotation:0,dx:0,dy:0,drag:false,lastX:0,lastY:0} };
 const typeLabels = ['P','PS','K','KS','K（要フォロー）','KS（要フォロー）'];
 const titleOptions = ['','ONE','GM','PM','ECM','DCM','PDCM'];
@@ -12,7 +12,7 @@ const progressFlags = [
   ['activity_flag_dreamlist','夢リスト'],['activity_flag_sevenbridge','センスオブブリッジ'],['activity_flag_listup','リストアップ'],['activity_flag_awpgrad','AWP卒業']
 ];
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
-async function forceUpdateApp(){try{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r=>r.unregister()));} if(window.caches){const ks=await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k)));} toast('最新版を読み込みます'); setTimeout(()=>{location.href=location.pathname+'?v=007&t='+Date.now();},350);}catch(e){location.href=location.pathname+'?v=007&t='+Date.now();}}
+async function forceUpdateApp(){try{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r=>r.unregister()));} if(window.caches){const ks=await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k)));} toast('最新版を読み込みます'); setTimeout(()=>{location.href=location.pathname+'?v=010&t='+Date.now();},350);}catch(e){location.href=location.pathname+'?v=010&t='+Date.now();}}
 function uid(){return (crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)).replace(/-/g,'')}
 function markDirty(v=true){state.dirty=v; $('#dirtyMark').textContent=v?'未書き出し':''}
 function escapeHtml(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
@@ -51,7 +51,12 @@ function switchTab(name){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-function makeAvatar(b64,name,large=false){const src=photoSrc(b64); if(src){return `<img class="avatar ${large?'large':''}" src="${src}" alt="" data-preview="${escapeHtml(src)}">`} return `<div class="avatar ${large?'large':''}">${escapeHtml((name||'?').slice(0,1))}</div>`}
+function placeholderImage(name){
+  const initial = escapeHtml((name||'?').slice(0,1));
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="720" height="420" viewBox="0 0 720 420"><rect width="720" height="420" rx="28" fill="#102136"/><text x="360" y="235" text-anchor="middle" font-family="sans-serif" font-size="120" font-weight="700" fill="#9ecfff">${initial}</text><text x="360" y="305" text-anchor="middle" font-family="sans-serif" font-size="28" fill="#d8e6f5">写真未登録</text></svg>`;
+  return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+}
+function makeAvatar(b64,name,large=false){const src=photoSrc(b64); if(src){return `<img class="avatar ${large?'large':''}" src="${src}" alt="" data-preview="${escapeHtml(src)}">`} return `<div class="avatar ${large?'large':''}" data-preview="">${escapeHtml((name||'?').slice(0,1))}</div>`}
 function typeTag(t){const cls=String(t||'').toLowerCase().replace(/[（）]/g,'');return `<span class="tag ${cls}">${escapeHtml(t||'-')}</span>`}
 function searchText(obj,keys){return keys.map(k=>obj?.[k]||'').join(' ').toLowerCase()}
 function renderSelf(){const q=($('#selfSearch')?.value||'').trim().toLowerCase();const list=$('#selfList'); if(!list)return; const allowed=['P','PS','K（要フォロー）','KS（要フォロー）']; let rows=membersArray().filter(m=>allowed.includes(m.member_type||'')); rows=rows.filter(m=>!q||searchText({...m,_memo:selfMemo(m)},['name','member_type','introducer_name','profile_region','profile_role','memo','note','activity_promise','activity_next_action','activity_next_date','activity_event','activity_temperature','activity_note','activity_memo','_memo']).includes(q)); $('#selfCount').textContent=`${rows.length}件`; list.innerHTML=rows.map(m=>`<article class=\"member-card\" data-self-id=\"${m.id}\" data-preview-type=\"self\" data-preview-id=\"${m.id}\">${makeAvatar(m.photo_data,m.name)}<div class=\"card-main\"><div class=\"card-title\">${escapeHtml(m.name)}</div><div class=\"card-meta\">${typeTag(m.member_type)} ${escapeHtml(m.profile_region||'')} ${escapeHtml(m.profile_role||'')}<br>${escapeHtml(m.activity_next_action||'')}${m.activity_next_date?' / '+escapeHtml(m.activity_next_date):''}</div></div><div class=\"card-actions\"><button class=\"secondary-btn small\" data-edit-self=\"${m.id}\">編集</button></div></article>`).join('')||'<p class=\"notice\">該当なし</p>'}
@@ -90,10 +95,10 @@ function loadCropFile(file){if(!file)return; const img=new Image(); img.onload=(
 function drawCrop(){const c=$('#cropCanvas'),ctx=c.getContext('2d'),cr=state.crop; ctx.clearRect(0,0,c.width,c.height); ctx.fillStyle='#111';ctx.fillRect(0,0,c.width,c.height); if(!cr.img)return; ctx.save(); ctx.translate(c.width/2+cr.dx,c.height/2+cr.dy); ctx.rotate(cr.rotation*Math.PI/180); ctx.scale(cr.scale,cr.scale); ctx.drawImage(cr.img,-cr.img.width/2,-cr.img.height/2); ctx.restore()}
 function applyPhoto(){const src=$('#cropCanvas'); const out=document.createElement('canvas'); out.width=160; out.height=160; const o=out.getContext('2d'); o.drawImage(src,40,40,240,240,0,0,160,160); setCurrentPhoto(stripDataUrl(out.toDataURL('image/jpeg',0.72))); $('#photoDialog').close(); $('#editDialog').close(); toast('写真を記入しました。最後にJSON書き出ししてください')}
 function preview(src, triggerEl=null){
-  if(!src)return;
   const d=$('#previewDialog');
-  $('#previewImage').src=src;
   state.previewTarget = getPreviewTarget(triggerEl);
+  const obj = getPreviewObj(state.previewTarget);
+  $('#previewImage').src = src || placeholderImage(obj?.name || '');
   $('#previewMemo').value = getPreviewMemo(state.previewTarget);
   if(!d.open)d.show();
 }
@@ -154,6 +159,6 @@ function init(){ if(localStorage.getItem('pmmPocketDark')==='1')document.body.cl
  document.addEventListener('click',e=>{ if(e.target?.id==='photoEditBtn')openPhoto(); if(e.target?.id==='photoRemoveBtn'){setCurrentPhoto(''); $('#editDialog').close(); toast('写真を削除しました。最後にJSON書き出ししてください')}});
  $('#closePhotoBtn').onclick=()=>$('#photoDialog').close(); $('#photoFileInput').onchange=e=>loadCropFile(e.target.files[0]); $('#photoCameraInput').onchange=e=>loadCropFile(e.target.files[0]); $('#rotatePhotoBtn').onclick=()=>{state.crop.rotation=(state.crop.rotation+90)%360;drawCrop()}; $('#clearPhotoBtn').onclick=()=>{setCurrentPhoto('');$('#photoDialog').close();$('#editDialog').close();toast('写真を削除しました。最後にJSON書き出ししてください')}; $('#applyPhotoBtn').onclick=applyPhoto; $('#zoomRange').oninput=e=>{state.crop.scale=Number(e.target.value);drawCrop()};
  const cw=$('.crop-wrap'); cw.addEventListener('pointerdown',e=>{state.crop.drag=true;state.crop.lastX=e.clientX;state.crop.lastY=e.clientY;cw.setPointerCapture(e.pointerId)}); cw.addEventListener('pointermove',e=>{if(!state.crop.drag)return;state.crop.dx+=e.clientX-state.crop.lastX;state.crop.dy+=e.clientY-state.crop.lastY;state.crop.lastX=e.clientX;state.crop.lastY=e.clientY;drawCrop()}); cw.addEventListener('pointerup',()=>state.crop.drag=false);
- if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=008').then(r=>r.update()).catch(()=>{})}
+ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=010').then(r=>r.update()).catch(()=>{})}
 }
 document.addEventListener('DOMContentLoaded',init);
