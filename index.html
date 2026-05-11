@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0f4c81">
   <title>PMM Pocket Web</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=005">
+  <link rel="stylesheet" href="styles.css?v=006">
 </head>
 <body>
   <div id="app">
@@ -15,7 +15,7 @@
         <img src="assets/icon-192.png" alt="PMM" class="brand-icon">
         <div>
           <div class="brand-title">PMM Pocket Web</div>
-          <div class="brand-sub">PMMスマホ版 v005</div>
+          <div class="brand-sub">PMMスマホ版 v006</div>
         </div>
       </div>
       <button id="darkToggle" class="ghost-btn" type="button">ダーク</button>
@@ -26,11 +26,11 @@
         <div class="start-brand">
           <img src="assets/icon-192.png" alt="PMM" class="start-icon">
           <h1>PMM Pocket Web</h1>
-          <div class="start-version">PMMスマホ版 v005</div>
+          <div class="start-version">PMMスマホ版 v006</div>
         </div>
         <p class="notice">
-          PMM本体とWeb版で同じ保存ファイルを同時に編集すると 上書き事故の原因になります<br>
-          PMM本体を閉じてから読み込んでください
+          PC版PMMとWeb版で同じ保存ファイルを同時に編集すると 上書き事故の原因になります<br>
+          PC版PMMを閉じてから読み込んでください
         </p>
         <div class="start-actions">
           <label class="primary-btn file-label">
@@ -53,10 +53,10 @@
               <img src="assets/icon-192.png" alt="PMM" class="brand-icon">
               <div>
                 <div class="brand-title">PMM Pocket Web</div>
-                <div class="brand-sub">PMMスマホ版 v005</div>
+                <div class="brand-sub">PMMスマホ版 v006</div>
               </div>
             </div>
-            <p class="notice small-notice">PMM本体を閉じてから使ってください</p>
+            <p class="notice small-notice">PC版PMMを閉じてから使ってください</p>
             <div class="file-info centered">
               <strong id="loadedName">未読込</strong>
               <span id="dirtyMark"></span>
@@ -82,8 +82,8 @@
 
         <section id="tab-self" class="tab-view">
           <div class="section-head">
-            <h2>新メンバー仮登録 <span id="pendingCount" class="count"></span></h2>
-            <button id="pendingAddBtn" class="primary-btn small" type="button">追加</button>
+            <h2>新メンバー <span id="pendingCount" class="count"></span></h2>
+            <button id="pendingAddBtn" class="primary-btn small" type="button">新メンバー登録</button>
           </div>
           <input id="pendingSearch" class="search wide" type="search" placeholder="名前 紹介者 地域 メモで検索">
           <div id="pendingList" class="card-list pending-top"></div>
@@ -117,7 +117,10 @@
     <form method="dialog" id="editForm">
       <div class="dialog-head">
         <h3 id="editTitle">編集</h3>
-        <button type="button" class="ghost-btn" id="closeEditBtn">閉じる</button>
+        <div class="dialog-head-actions">
+          <button type="button" id="editSaveTopBtn" class="primary-btn small hidden">保存</button>
+          <button type="button" class="ghost-btn" id="closeEditBtn">閉じる</button>
+        </div>
       </div>
       <div id="editBody"></div>
       <div class="dialog-actions">
@@ -162,6 +165,6 @@
   </dialog>
 
   <div id="toast" class="toast"></div>
-  <script src="app.js?v=005"></script>
+  <script src="app.js?v=006"></script>
 </body>
 </html>
