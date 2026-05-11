@@ -1,7 +1,7 @@
 'use strict';
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
-const APP_VERSION = 'PMM Pocket Web v007';
+const APP_VERSION = 'PMM Pocket Web v008';
 const state = { data:null, fileName:'pmm_data.json', fileHandle:null, dirty:false, edit:{type:null,id:null,index:null}, photoTarget:null, crop:{img:null,scale:1,rotation:0,dx:0,dy:0,drag:false,lastX:0,lastY:0} };
 const typeLabels = ['P','PS','K','KS','K（要フォロー）','KS（要フォロー）'];
 const titleOptions = ['','ONE','GM','PM','ECM','DCM','PDCM'];
@@ -89,7 +89,7 @@ function setCurrentPhoto(b64){const obj=getCurrentObj(); if(obj){obj.photo_data=
 function loadCropFile(file){if(!file)return; const img=new Image(); img.onload=()=>{state.crop.img=img; state.crop.scale=Math.max(320/img.width,320/img.height); $('#zoomRange').value=state.crop.scale; state.crop.dx=0; state.crop.dy=0; drawCrop()}; img.src=URL.createObjectURL(file)}
 function drawCrop(){const c=$('#cropCanvas'),ctx=c.getContext('2d'),cr=state.crop; ctx.clearRect(0,0,c.width,c.height); ctx.fillStyle='#111';ctx.fillRect(0,0,c.width,c.height); if(!cr.img)return; ctx.save(); ctx.translate(c.width/2+cr.dx,c.height/2+cr.dy); ctx.rotate(cr.rotation*Math.PI/180); ctx.scale(cr.scale,cr.scale); ctx.drawImage(cr.img,-cr.img.width/2,-cr.img.height/2); ctx.restore()}
 function applyPhoto(){const src=$('#cropCanvas'); const out=document.createElement('canvas'); out.width=160; out.height=160; const o=out.getContext('2d'); o.drawImage(src,40,40,240,240,0,0,160,160); setCurrentPhoto(stripDataUrl(out.toDataURL('image/jpeg',0.72))); $('#photoDialog').close(); $('#editDialog').close(); toast('写真を記入しました。最後にJSON書き出ししてください')}
-function preview(src){if(!src)return; $('#previewImage').src=src; $('#previewDialog').showModal()}
+function preview(src){if(!src)return; const d=$('#previewDialog'); $('#previewImage').src=src; if(!d.open)d.show();}
 function showInfo(kind){const help=`<p><strong>使い方</strong></p><ol><li>PC版PMMを閉じます</li><li>JSON読込でPMM保存ファイルを読み込みます</li><li>自メンバー活動管理や他メンバー辞書を編集します</li><li>最後にJSON書き出しで保存します</li><li>PC版PMMで書き出したJSONを開きます</li></ol><p>このWeb版はデータをサーバーへ保存しません。読み込んだJSONはブラウザ内で処理します。</p>`;
  const about=`<p><strong>PMM Pocket Web</strong><br>${APP_VERSION}</p><p>PC版PMMで作成したJSONをスマホやPCブラウザで確認・編集する補助ツールです。</p><p>お問い合わせ先：兵藤 茂樹<br>LINE: https://line.me/ti/p/XJt7xbeJ1j</p>`;
  const ios=`<p><strong>iPhoneでホーム画面に追加</strong></p><ol><li>Safariでこのページを開きます</li><li>画面下または上の共有ボタンを押します</li><li><strong>ホーム画面に追加</strong>を選びます</li><li>追加を押すとアプリのように開けます</li></ol><p>Safari以外では表示が違う場合があります。</p>`;
@@ -106,6 +106,6 @@ function init(){ if(localStorage.getItem('pmmPocketDark')==='1')document.body.cl
  document.addEventListener('click',e=>{ if(e.target?.id==='photoEditBtn')openPhoto(); if(e.target?.id==='photoRemoveBtn'){setCurrentPhoto(''); $('#editDialog').close(); toast('写真を削除しました。最後にJSON書き出ししてください')}});
  $('#closePhotoBtn').onclick=()=>$('#photoDialog').close(); $('#photoFileInput').onchange=e=>loadCropFile(e.target.files[0]); $('#photoCameraInput').onchange=e=>loadCropFile(e.target.files[0]); $('#rotatePhotoBtn').onclick=()=>{state.crop.rotation=(state.crop.rotation+90)%360;drawCrop()}; $('#clearPhotoBtn').onclick=()=>{setCurrentPhoto('');$('#photoDialog').close();$('#editDialog').close();toast('写真を削除しました。最後にJSON書き出ししてください')}; $('#applyPhotoBtn').onclick=applyPhoto; $('#zoomRange').oninput=e=>{state.crop.scale=Number(e.target.value);drawCrop()};
  const cw=$('.crop-wrap'); cw.addEventListener('pointerdown',e=>{state.crop.drag=true;state.crop.lastX=e.clientX;state.crop.lastY=e.clientY;cw.setPointerCapture(e.pointerId)}); cw.addEventListener('pointermove',e=>{if(!state.crop.drag)return;state.crop.dx+=e.clientX-state.crop.lastX;state.crop.dy+=e.clientY-state.crop.lastY;state.crop.lastX=e.clientX;state.crop.lastY=e.clientY;drawCrop()}); cw.addEventListener('pointerup',()=>state.crop.drag=false);
- if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=007').then(r=>r.update()).catch(()=>{})}
+ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=008').then(r=>r.update()).catch(()=>{})}
 }
 document.addEventListener('DOMContentLoaded',init);

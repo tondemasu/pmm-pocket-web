@@ -16,7 +16,7 @@ dialog{border:0;border-radius:22px;padding:0;background:var(--panel);color:var(-
 .dialog-head-actions{display:flex;align-items:center;gap:8px;}
 
 
-/* v007 adjustments */
+/* v008 adjustments */
 .helper-actions{margin-top:8px;flex-wrap:wrap}
 .preview-dialog{width:100vw!important;height:100dvh!important;max-width:none!important;border-radius:0!important;background:#000!important;padding:0!important}
 .preview-dialog img{width:min(92vw,620px)!important;height:auto!important;max-height:88dvh!important;object-fit:contain!important}
@@ -28,4 +28,49 @@ dialog{border:0;border-radius:22px;padding:0;background:var(--panel);color:var(-
   .home-card .toolbar-actions{gap:8px}
   .helper-actions .secondary-btn{font-size:12px;padding:7px 9px;min-height:34px}
   .preview-dialog img{width:94vw!important;max-height:84dvh!important}
+}
+
+/* v008 refinements */
+.form-row textarea{min-height:170px!important;line-height:1.55!important}
+@media(max-width:640px){.form-row textarea{min-height:190px!important}}
+.preview-dialog{
+  position:fixed!important;
+  top:calc(env(safe-area-inset-top) + 10px)!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+  width:min(96vw,720px)!important;
+  height:auto!important;
+  max-height:46dvh!important;
+  max-width:none!important;
+  border-radius:18px!important;
+  background:rgba(0,0,0,.92)!important;
+  padding:48px 10px 12px!important;
+  display:none;
+  place-items:center;
+  overflow:hidden!important;
+  z-index:9999!important;
+}
+.preview-dialog[open]{display:grid!important}
+.preview-dialog::backdrop{background:transparent!important}
+.preview-dialog img{
+  width:auto!important;
+  max-width:92vw!important;
+  height:auto!important;
+  max-height:calc(46dvh - 70px)!important;
+  object-fit:contain!important;
+}
+.preview-close{
+  position:absolute!important;
+  right:12px!important;
+  top:8px!important;
+  color:#fff!important;
+  background:rgba(15,23,42,.78)!important;
+  border-color:rgba(255,255,255,.35)!important;
+  min-height:36px!important;
+  padding:7px 12px!important;
+  z-index:2!important;
+}
+@media(max-width:640px){
+  .preview-dialog{top:calc(env(safe-area-inset-top) + 6px)!important;width:96vw!important;max-height:43dvh!important;padding-top:44px!important}
+  .preview-dialog img{max-height:calc(43dvh - 62px)!important;max-width:92vw!important}
 }
