@@ -15,7 +15,7 @@
         <img src="assets/icon-192.png" alt="PMM" class="brand-icon">
         <div>
           <div class="brand-title">PMM Pocket Web</div>
-          <div class="brand-sub">PMMスマホ版 v008</div>
+          <div class="brand-sub">PMMスマホ版 v009</div>
         </div>
       </div>
       <button id="darkToggle" class="ghost-btn" type="button" data-dark-toggle>ダーク</button>
@@ -26,7 +26,7 @@
         <div class="start-brand">
           <img src="assets/icon-192.png" alt="PMM" class="start-icon">
           <h1>PMM Pocket Web</h1>
-          <div class="start-version">PMMスマホ版 v008</div>
+          <div class="start-version">PMMスマホ版 v009</div>
         </div>
         <p class="notice">
           PC版PMMとWeb版で同じ保存ファイルを同時に編集すると 上書き事故の原因になります<br>
@@ -55,7 +55,7 @@
               <img src="assets/icon-192.png" alt="PMM" class="brand-icon">
               <div>
                 <div class="brand-title">PMM Pocket Web</div>
-                <div class="brand-sub">PMMスマホ版 v008</div>
+                <div class="brand-sub">PMMスマホ版 v009</div>
               </div>
             </div>
             <p class="notice small-notice">PC版PMMを閉じてから使ってください</p>
@@ -160,7 +160,14 @@
 
   <dialog id="previewDialog" class="preview-dialog">
     <button type="button" class="ghost-btn preview-close" id="closePreviewBtn">閉じる</button>
-    <img id="previewImage" alt="顔写真プレビュー">
+    <div class="preview-photo-wrap">
+      <img id="previewImage" alt="顔写真プレビュー">
+    </div>
+    <div class="preview-memo-box">
+      <div class="preview-memo-title">メモ</div>
+      <textarea id="previewMemo" placeholder="メモ"></textarea>
+      <button type="button" id="previewMemoSaveBtn" class="primary-btn small">メモを記入</button>
+    </div>
   </dialog>
 
   <dialog id="infoDialog" class="info-dialog">
@@ -172,6 +179,6 @@
   </dialog>
 
   <div id="toast" class="toast"></div>
-  <script src="app.js?v=008"></script>
+  <script src="app.js?v=009"></script>
 </body>
 </html>

@@ -1,8 +1,8 @@
 'use strict';
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
-const APP_VERSION = 'PMM Pocket Web v008';
-const state = { data:null, fileName:'pmm_data.json', fileHandle:null, dirty:false, edit:{type:null,id:null,index:null}, photoTarget:null, crop:{img:null,scale:1,rotation:0,dx:0,dy:0,drag:false,lastX:0,lastY:0} };
+const APP_VERSION = 'PMM Pocket Web v009';
+const state = { data:null, fileName:'pmm_data.json', fileHandle:null, dirty:false, edit:{type:null,id:null,index:null}, previewTarget:null, photoTarget:null, crop:{img:null,scale:1,rotation:0,dx:0,dy:0,drag:false,lastX:0,lastY:0} };
 const typeLabels = ['P','PS','K','KS','K（要フォロー）','KS（要フォロー）'];
 const titleOptions = ['','ONE','GM','PM','ECM','DCM','PDCM'];
 const genderOptions = ['','男性','女性','その他'];
@@ -54,9 +54,9 @@ function switchTab(name){
 function makeAvatar(b64,name,large=false){const src=photoSrc(b64); if(src){return `<img class="avatar ${large?'large':''}" src="${src}" alt="" data-preview="${escapeHtml(src)}">`} return `<div class="avatar ${large?'large':''}">${escapeHtml((name||'?').slice(0,1))}</div>`}
 function typeTag(t){const cls=String(t||'').toLowerCase().replace(/[（）]/g,'');return `<span class="tag ${cls}">${escapeHtml(t||'-')}</span>`}
 function searchText(obj,keys){return keys.map(k=>obj?.[k]||'').join(' ').toLowerCase()}
-function renderSelf(){const q=($('#selfSearch')?.value||'').trim().toLowerCase();const list=$('#selfList'); if(!list)return; const allowed=['P','PS','K（要フォロー）','KS（要フォロー）']; let rows=membersArray().filter(m=>allowed.includes(m.member_type||'')); rows=rows.filter(m=>!q||searchText({...m,_memo:selfMemo(m)},['name','member_type','introducer_name','profile_region','profile_role','memo','note','activity_promise','activity_next_action','activity_next_date','activity_event','activity_temperature','activity_note','activity_memo','_memo']).includes(q)); $('#selfCount').textContent=`${rows.length}件`; list.innerHTML=rows.map(m=>`<article class=\"member-card\" data-self-id=\"${m.id}\">${makeAvatar(m.photo_data,m.name)}<div class=\"card-main\"><div class=\"card-title\">${escapeHtml(m.name)}</div><div class=\"card-meta\">${typeTag(m.member_type)} ${escapeHtml(m.profile_region||'')} ${escapeHtml(m.profile_role||'')}<br>${escapeHtml(m.activity_next_action||'')}${m.activity_next_date?' / '+escapeHtml(m.activity_next_date):''}</div></div><div class=\"card-actions\"><button class=\"secondary-btn small\" data-edit-self=\"${m.id}\">編集</button></div></article>`).join('')||'<p class=\"notice\">該当なし</p>'}
-function renderOther(){const q=($('#otherSearch')?.value||'').trim().toLowerCase(); const base=(state.data?.other_members||[]).map((o,idx)=>({...o,_idx:idx,_memo:otherMemo(o)})); const rows=base.filter(o=>!q||searchText(o,['name','team','team2','team3','role','region','gender','generation','note','memo','_memo']).includes(q)); $('#otherCount').textContent=`${rows.length}件`; $('#otherList').innerHTML=rows.map(o=>`<article class=\"member-card\"><div data-preview-wrap>${makeAvatar(o.photo_data,o.name)}</div><div class=\"card-main\"><div class=\"card-title\">${escapeHtml(o.name)}</div><div class=\"card-meta\">${escapeHtml([o.team,o.team2,o.team3].filter(Boolean).join(' / ')||'-')}<br>${escapeHtml([o.role,o.region,o.gender,o.generation].filter(Boolean).join(' / '))}</div></div><div class=\"card-actions\"><button class=\"secondary-btn small\" data-edit-other=\"${o._idx}\">編集</button></div></article>`).join('')||'<p class=\"notice\">該当なし</p>'}
-function renderPending(){const q=($('#pendingSearch')?.value||'').trim().toLowerCase(); const base=(state.data?.pending_self_members||[]).map((p,idx)=>({...p,_idx:idx,_memo:pendingMemo(p)})); const rows=base.filter(p=>!q||searchText(p,['name','member_type','introducer_name','region','title','memo','activity_memo','note','status','next_action','next_action_date','event','_memo']).includes(q)); $('#pendingCount').textContent=`${rows.length}件`; $('#pendingList').innerHTML=rows.map(p=>`<article class=\"member-card\">${makeAvatar(p.photo_data,p.name)}<div class=\"card-main\"><div class=\"card-title\">${escapeHtml(p.name)}</div><div class=\"card-meta\">${typeTag(p.member_type)} 紹介者: ${escapeHtml(p.introducer_name||'-')}<br>${escapeHtml([p.region,p.title,p.next_action,p.next_action_date].filter(Boolean).join(' / '))}</div></div><div class=\"card-actions\"><button class=\"secondary-btn small\" data-edit-pending=\"${p._idx}\">編集</button></div></article>`).join('')||'<p class=\"notice\">該当なし</p>'}
+function renderSelf(){const q=($('#selfSearch')?.value||'').trim().toLowerCase();const list=$('#selfList'); if(!list)return; const allowed=['P','PS','K（要フォロー）','KS（要フォロー）']; let rows=membersArray().filter(m=>allowed.includes(m.member_type||'')); rows=rows.filter(m=>!q||searchText({...m,_memo:selfMemo(m)},['name','member_type','introducer_name','profile_region','profile_role','memo','note','activity_promise','activity_next_action','activity_next_date','activity_event','activity_temperature','activity_note','activity_memo','_memo']).includes(q)); $('#selfCount').textContent=`${rows.length}件`; list.innerHTML=rows.map(m=>`<article class=\"member-card\" data-self-id=\"${m.id}\" data-preview-type=\"self\" data-preview-id=\"${m.id}\">${makeAvatar(m.photo_data,m.name)}<div class=\"card-main\"><div class=\"card-title\">${escapeHtml(m.name)}</div><div class=\"card-meta\">${typeTag(m.member_type)} ${escapeHtml(m.profile_region||'')} ${escapeHtml(m.profile_role||'')}<br>${escapeHtml(m.activity_next_action||'')}${m.activity_next_date?' / '+escapeHtml(m.activity_next_date):''}</div></div><div class=\"card-actions\"><button class=\"secondary-btn small\" data-edit-self=\"${m.id}\">編集</button></div></article>`).join('')||'<p class=\"notice\">該当なし</p>'}
+function renderOther(){const q=($('#otherSearch')?.value||'').trim().toLowerCase(); const base=(state.data?.other_members||[]).map((o,idx)=>({...o,_idx:idx,_memo:otherMemo(o)})); const rows=base.filter(o=>!q||searchText(o,['name','team','team2','team3','role','region','gender','generation','note','memo','_memo']).includes(q)); $('#otherCount').textContent=`${rows.length}件`; $('#otherList').innerHTML=rows.map(o=>`<article class=\"member-card\" data-preview-type=\"other\" data-preview-index=\"${o._idx}\"><div data-preview-wrap>${makeAvatar(o.photo_data,o.name)}</div><div class=\"card-main\"><div class=\"card-title\">${escapeHtml(o.name)}</div><div class=\"card-meta\">${escapeHtml([o.team,o.team2,o.team3].filter(Boolean).join(' / ')||'-')}<br>${escapeHtml([o.role,o.region,o.gender,o.generation].filter(Boolean).join(' / '))}</div></div><div class=\"card-actions\"><button class=\"secondary-btn small\" data-edit-other=\"${o._idx}\">編集</button></div></article>`).join('')||'<p class=\"notice\">該当なし</p>'}
+function renderPending(){const q=($('#pendingSearch')?.value||'').trim().toLowerCase(); const base=(state.data?.pending_self_members||[]).map((p,idx)=>({...p,_idx:idx,_memo:pendingMemo(p)})); const rows=base.filter(p=>!q||searchText(p,['name','member_type','introducer_name','region','title','memo','activity_memo','note','status','next_action','next_action_date','event','_memo']).includes(q)); $('#pendingCount').textContent=`${rows.length}件`; $('#pendingList').innerHTML=rows.map(p=>`<article class=\"member-card\" data-preview-type=\"pending\" data-preview-index=\"${p._idx}\">${makeAvatar(p.photo_data,p.name)}<div class=\"card-main\"><div class=\"card-title\">${escapeHtml(p.name)}</div><div class=\"card-meta\">${typeTag(p.member_type)} 紹介者: ${escapeHtml(p.introducer_name||'-')}<br>${escapeHtml([p.region,p.title,p.next_action,p.next_action_date].filter(Boolean).join(' / '))}</div></div><div class=\"card-actions\"><button class=\"secondary-btn small\" data-edit-pending=\"${p._idx}\">編集</button></div></article>`).join('')||'<p class=\"notice\">該当なし</p>'}
 function formInput(label,name,value='',type='text'){return `<div class="form-row"><label>${label}</label><input name="${name}" type="${type}" value="${escapeHtml(value)}"></div>`}
 function formText(label,name,value=''){return `<div class="form-row"><label>${label}</label><textarea name="${name}">${escapeHtml(value)}</textarea></div>`}
 function formSelect(label,name,value='',opts=[]){return `<div class="form-row"><label>${label}</label><select name="${name}">${opts.map(o=>`<option value="${escapeHtml(o)}" ${o===value?'selected':''}>${escapeHtml(o||' ')}</option>`).join('')}</select></div>`}
@@ -89,7 +89,55 @@ function setCurrentPhoto(b64){const obj=getCurrentObj(); if(obj){obj.photo_data=
 function loadCropFile(file){if(!file)return; const img=new Image(); img.onload=()=>{state.crop.img=img; state.crop.scale=Math.max(320/img.width,320/img.height); $('#zoomRange').value=state.crop.scale; state.crop.dx=0; state.crop.dy=0; drawCrop()}; img.src=URL.createObjectURL(file)}
 function drawCrop(){const c=$('#cropCanvas'),ctx=c.getContext('2d'),cr=state.crop; ctx.clearRect(0,0,c.width,c.height); ctx.fillStyle='#111';ctx.fillRect(0,0,c.width,c.height); if(!cr.img)return; ctx.save(); ctx.translate(c.width/2+cr.dx,c.height/2+cr.dy); ctx.rotate(cr.rotation*Math.PI/180); ctx.scale(cr.scale,cr.scale); ctx.drawImage(cr.img,-cr.img.width/2,-cr.img.height/2); ctx.restore()}
 function applyPhoto(){const src=$('#cropCanvas'); const out=document.createElement('canvas'); out.width=160; out.height=160; const o=out.getContext('2d'); o.drawImage(src,40,40,240,240,0,0,160,160); setCurrentPhoto(stripDataUrl(out.toDataURL('image/jpeg',0.72))); $('#photoDialog').close(); $('#editDialog').close(); toast('写真を記入しました。最後にJSON書き出ししてください')}
-function preview(src){if(!src)return; const d=$('#previewDialog'); $('#previewImage').src=src; if(!d.open)d.show();}
+function preview(src, triggerEl=null){
+  if(!src)return;
+  const d=$('#previewDialog');
+  $('#previewImage').src=src;
+  state.previewTarget = getPreviewTarget(triggerEl);
+  $('#previewMemo').value = getPreviewMemo(state.previewTarget);
+  if(!d.open)d.show();
+}
+function getPreviewTarget(el){
+  const card = el?.closest?.('[data-preview-type]');
+  if(card){
+    const type=card.dataset.previewType;
+    if(type==='self') return {type:'self', id:card.dataset.previewId};
+    return {type, index:Number(card.dataset.previewIndex)};
+  }
+  if(el?.closest?.('#editDialog') && state.edit?.type){
+    if(state.edit.type==='self') return {type:'self', id:state.edit.id};
+    return {type:state.edit.type, index:state.edit.index};
+  }
+  return null;
+}
+function getPreviewObj(target){
+  if(!target||!state.data)return null;
+  if(target.type==='self') return membersArray().find(m=>String(m.id)===String(target.id));
+  if(target.type==='other') return state.data.other_members?.[target.index];
+  if(target.type==='pending') return state.data.pending_self_members?.[target.index];
+  return null;
+}
+function getPreviewMemo(target){
+  const obj=getPreviewObj(target);
+  if(!obj)return '';
+  if(target.type==='self') return selfMemo(obj);
+  if(target.type==='other') return otherMemo(obj);
+  if(target.type==='pending') return pendingMemo(obj);
+  return '';
+}
+function savePreviewMemo(){
+  const target=state.previewTarget;
+  const obj=getPreviewObj(target);
+  if(!obj){toast('メモの対象が見つかりません');return;}
+  const v=$('#previewMemo').value||'';
+  if(target.type==='self') setAliases(obj,['activity_note','activity_memo','memo'],v);
+  else if(target.type==='other') setAliases(obj,['note','memo'],v);
+  else if(target.type==='pending') setAliases(obj,['activity_memo','memo'],v);
+  markDirty();
+  renderAll();
+  toast('メモを記入しました。最後にJSON書き出ししてください');
+}
+
 function showInfo(kind){const help=`<p><strong>使い方</strong></p><ol><li>PC版PMMを閉じます</li><li>JSON読込でPMM保存ファイルを読み込みます</li><li>自メンバー活動管理や他メンバー辞書を編集します</li><li>最後にJSON書き出しで保存します</li><li>PC版PMMで書き出したJSONを開きます</li></ol><p>このWeb版はデータをサーバーへ保存しません。読み込んだJSONはブラウザ内で処理します。</p>`;
  const about=`<p><strong>PMM Pocket Web</strong><br>${APP_VERSION}</p><p>PC版PMMで作成したJSONをスマホやPCブラウザで確認・編集する補助ツールです。</p><p>お問い合わせ先：兵藤 茂樹<br>LINE: https://line.me/ti/p/XJt7xbeJ1j</p>`;
  const ios=`<p><strong>iPhoneでホーム画面に追加</strong></p><ol><li>Safariでこのページを開きます</li><li>画面下または上の共有ボタンを押します</li><li><strong>ホーム画面に追加</strong>を選びます</li><li>追加を押すとアプリのように開けます</li></ol><p>Safari以外では表示が違う場合があります。</p>`;
@@ -101,8 +149,8 @@ function init(){ if(localStorage.getItem('pmmPocketDark')==='1')document.body.cl
  $('#newDataBtn').onclick=()=>{state.data=emptyData();state.fileName='pmm_data.json';$('#loadedName').textContent=state.fileName;$('#startView').classList.add('hidden');$('#mainView').classList.remove('hidden');renderAll();markDirty(false)}; $('#saveBtn').onclick=writeJson;
  $$('.bottom-tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
  $('#selfSearch').oninput=renderSelf; $('#otherSearch').oninput=renderOther; $('#pendingSearch').oninput=renderPending; $('#otherAddBtn').onclick=()=>openEdit('other-new'); $('#pendingAddBtn').onclick=()=>openEdit('pending-new');
- document.body.addEventListener('click',e=>{const u=e.target.closest('[data-update-app]'); if(u) forceUpdateApp(); const p=e.target.closest('[data-preview]'); if(p) preview(p.dataset.preview); const s=e.target.closest('[data-edit-self]'); if(s)openEdit('self',s.dataset.editSelf); const o=e.target.closest('[data-edit-other]'); if(o)openEdit('other',o.dataset.editOther); const pn=e.target.closest('[data-edit-pending]'); if(pn)openEdit('pending',pn.dataset.editPending); const j=e.target.closest('[data-tab-jump]'); if(j)switchTab(j.dataset.tabJump); const l=e.target.closest('[data-dialog]'); if(l)showInfo(l.dataset.dialog);});
- $('#closeEditBtn').onclick=()=>$('#editDialog').close(); $('#editSaveBtn').onclick=saveEdit; $('#editSaveTopBtn').onclick=saveEdit; $('#deleteBtn').onclick=deleteEdit; $('#closeInfoBtn').onclick=()=>$('#infoDialog').close(); $('#closePreviewBtn').onclick=()=>$('#previewDialog').close();
+ document.body.addEventListener('click',e=>{const u=e.target.closest('[data-update-app]'); if(u) forceUpdateApp(); const p=e.target.closest('[data-preview]'); if(p) preview(p.dataset.preview, p); const s=e.target.closest('[data-edit-self]'); if(s)openEdit('self',s.dataset.editSelf); const o=e.target.closest('[data-edit-other]'); if(o)openEdit('other',o.dataset.editOther); const pn=e.target.closest('[data-edit-pending]'); if(pn)openEdit('pending',pn.dataset.editPending); const j=e.target.closest('[data-tab-jump]'); if(j)switchTab(j.dataset.tabJump); const l=e.target.closest('[data-dialog]'); if(l)showInfo(l.dataset.dialog);});
+ $('#closeEditBtn').onclick=()=>$('#editDialog').close(); $('#editSaveBtn').onclick=saveEdit; $('#editSaveTopBtn').onclick=saveEdit; $('#deleteBtn').onclick=deleteEdit; $('#closeInfoBtn').onclick=()=>$('#infoDialog').close(); $('#closePreviewBtn').onclick=()=>$('#previewDialog').close(); $('#previewMemoSaveBtn').onclick=savePreviewMemo;
  document.addEventListener('click',e=>{ if(e.target?.id==='photoEditBtn')openPhoto(); if(e.target?.id==='photoRemoveBtn'){setCurrentPhoto(''); $('#editDialog').close(); toast('写真を削除しました。最後にJSON書き出ししてください')}});
  $('#closePhotoBtn').onclick=()=>$('#photoDialog').close(); $('#photoFileInput').onchange=e=>loadCropFile(e.target.files[0]); $('#photoCameraInput').onchange=e=>loadCropFile(e.target.files[0]); $('#rotatePhotoBtn').onclick=()=>{state.crop.rotation=(state.crop.rotation+90)%360;drawCrop()}; $('#clearPhotoBtn').onclick=()=>{setCurrentPhoto('');$('#photoDialog').close();$('#editDialog').close();toast('写真を削除しました。最後にJSON書き出ししてください')}; $('#applyPhotoBtn').onclick=applyPhoto; $('#zoomRange').oninput=e=>{state.crop.scale=Number(e.target.value);drawCrop()};
  const cw=$('.crop-wrap'); cw.addEventListener('pointerdown',e=>{state.crop.drag=true;state.crop.lastX=e.clientX;state.crop.lastY=e.clientY;cw.setPointerCapture(e.pointerId)}); cw.addEventListener('pointermove',e=>{if(!state.crop.drag)return;state.crop.dx+=e.clientX-state.crop.lastX;state.crop.dy+=e.clientY-state.crop.lastY;state.crop.lastX=e.clientX;state.crop.lastY=e.clientY;drawCrop()}); cw.addEventListener('pointerup',()=>state.crop.drag=false);
