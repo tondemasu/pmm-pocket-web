@@ -14,3 +14,18 @@ dialog{border:0;border-radius:22px;padding:0;background:var(--panel);color:var(-
 @media(max-width:640px){.app-header{display:none}main{padding:12px}.home-grid{grid-template-columns:1fr 1fr}.section-head{align-items:stretch;flex-direction:column}.search{width:100%}.brand-title{font-size:18px}.brand-icon{width:38px;height:38px}}
 
 .dialog-head-actions{display:flex;align-items:center;gap:8px;}
+
+
+/* v007 adjustments */
+.helper-actions{margin-top:8px;flex-wrap:wrap}
+.preview-dialog{width:100vw!important;height:100dvh!important;max-width:none!important;border-radius:0!important;background:#000!important;padding:0!important}
+.preview-dialog img{width:min(92vw,620px)!important;height:auto!important;max-height:88dvh!important;object-fit:contain!important}
+.preview-close{right:18px!important;top:calc(env(safe-area-inset-top) + 14px)!important;background:rgba(0,0,0,.45)!important}
+@media (max-width: 560px){
+  .app-header{padding-top:calc(env(safe-area-inset-top) + 8px)}
+  .brand-title{font-size:18px}
+  .brand-sub{font-size:11px}
+  .home-card .toolbar-actions{gap:8px}
+  .helper-actions .secondary-btn{font-size:12px;padding:7px 9px;min-height:34px}
+  .preview-dialog img{width:94vw!important;max-height:84dvh!important}
+}
