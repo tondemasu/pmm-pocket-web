@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0f4c81">
   <title>PMM Pocket Web</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=004">
 </head>
 <body>
   <div id="app">
@@ -15,7 +15,7 @@
         <img src="assets/icon-192.png" alt="PMM" class="brand-icon">
         <div>
           <div class="brand-title">PMM Pocket Web</div>
-          <div class="brand-sub">PMMスマホ版 v003</div>
+          <div class="brand-sub">PMMスマホ版 v004</div>
         </div>
       </div>
       <button id="darkToggle" class="ghost-btn" type="button">ダーク</button>
@@ -26,7 +26,7 @@
         <div class="start-brand">
           <img src="assets/icon-192.png" alt="PMM" class="start-icon">
           <h1>PMM Pocket Web</h1>
-          <div class="start-version">PMMスマホ版 v003</div>
+          <div class="start-version">PMMスマホ版 v004</div>
         </div>
         <p class="notice">
           PMM本体とWeb版で同じ保存ファイルを同時に編集すると 上書き事故の原因になります<br>
@@ -42,6 +42,7 @@
         <div class="footer-links">
           <button class="link-btn" data-dialog="help">ヘルプ</button>
           <button class="link-btn" data-dialog="about">このアプリについて</button>
+          <button class="link-btn" data-update-app type="button">最新版に更新</button>
         </div>
       </section>
 
@@ -52,7 +53,7 @@
               <img src="assets/icon-192.png" alt="PMM" class="brand-icon">
               <div>
                 <div class="brand-title">PMM Pocket Web</div>
-                <div class="brand-sub">PMMスマホ版 v003</div>
+                <div class="brand-sub">PMMスマホ版 v004</div>
               </div>
             </div>
             <p class="notice small-notice">PMM本体を閉じてから使ってください</p>
@@ -63,6 +64,7 @@
             <div class="toolbar-actions centered-actions">
               <label class="secondary-btn small file-label">再読込<input id="fileInput2" type="file" accept="application/json,.json" hidden></label>
               <button id="saveBtn" class="primary-btn small" type="button">JSON書き出し</button>
+              <button class="secondary-btn small" data-update-app type="button">最新版に更新</button>
             </div>
           </div>
 
@@ -160,6 +162,6 @@
   </dialog>
 
   <div id="toast" class="toast"></div>
-  <script src="app.js"></script>
+  <script src="app.js?v=004"></script>
 </body>
 </html>
