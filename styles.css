@@ -76,7 +76,7 @@ dialog{border:0;border-radius:22px;padding:0;background:var(--panel);color:var(-
 }
 
 
-/* v009 photo preview: full width image + editable memo below */
+/* v011 photo preview: full width image + editable memo below */
 .preview-dialog{
   position:fixed!important;
   top:calc(env(safe-area-inset-top) + 6px)!important;
@@ -113,3 +113,13 @@ dialog{border:0;border-radius:22px;padding:0;background:var(--panel);color:var(-
   .preview-photo-wrap img,#previewImage{max-height:38dvh!important}
   #previewMemo{min-height:190px!important}
 }
+
+
+/* v011 self member edit tabs */
+.self-edit-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 14px;position:sticky;top:0;background:var(--panel);z-index:2;padding-bottom:8px}
+.self-edit-tab{border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:14px;padding:10px 8px;font-weight:800}
+.self-edit-tab.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.self-edit-pane{display:none}
+.self-edit-pane.active{display:block}
+.self-edit-pane h4{margin:8px 0 12px;font-size:17px}
+@media(max-width:640px){.self-edit-tabs{top:0}.self-edit-tab{padding:11px 8px}}
