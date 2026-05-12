@@ -165,3 +165,19 @@ dialog{border:0;border-radius:22px;padding:0;background:var(--panel);color:var(-
 .save-rename-box input{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--bg);color:var(--text);}
 .save-note{font-size:13px;color:var(--muted);line-height:1.6;margin:0;}
 @media(max-width:560px){.save-actions{grid-template-columns:1fr}.section-head{align-items:flex-start}.section-actions{width:100%;display:grid;grid-template-columns:1fr 1fr}.section-actions .small{width:100%;}}
+
+/* v015: red new-member badge and share text */
+.new-prefix{
+  border-color:#ef4444!important;
+  color:#fff!important;
+  background:#ef4444!important;
+  box-shadow:0 0 0 2px rgba(239,68,68,.18)!important;
+}
+body.dark .new-prefix{
+  background:#f43f5e!important;
+  border-color:#fb7185!important;
+  color:#fff!important;
+}
+.edit-quick-actions{display:flex;justify-content:flex-end;margin:0 0 12px;gap:8px}
+.share-text{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;line-height:1.6;overflow:auto;max-height:55vh}
+.card-actions{gap:8px}
