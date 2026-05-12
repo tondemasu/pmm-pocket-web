@@ -185,3 +185,17 @@ body.dark .new-prefix{
 .read-file-name{font-size:1.02rem;padding:.7rem .85rem;border:1px solid var(--line);border-radius:12px;background:var(--soft);}
 .strong-note{font-weight:700;color:var(--text);line-height:1.65;}
 .save-body .notice{line-height:1.65;}
+
+
+/* v016 additions */
+.point-summary{display:inline-block;margin-left:4px;font-size:12px;color:var(--muted)}
+.share-text{white-space:pre-wrap;word-break:break-all;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;max-height:42dvh;overflow:auto}
+.share-import-dialog{width:min(640px,96vw)}
+.share-import-text{width:100%;min-height:220px;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--bg);color:var(--text);font:inherit;line-height:1.5}
+.no-border{border-top:0!important}
+.confirm-message-left{text-align:left;line-height:1.7}
+.confirm-actions.stacked{display:grid;gap:10px}
+.preview-top-actions{position:absolute;right:12px;top:8px;display:flex;gap:8px;z-index:3}
+.preview-share,.preview-close{position:static!important;color:#fff!important;background:rgba(15,23,42,.78)!important;border-color:rgba(255,255,255,.35)!important;min-height:36px!important;padding:7px 12px!important}
+#confirmMessage{white-space:pre-line}
+@media(max-width:640px){.preview-top-actions{right:8px;left:8px;justify-content:flex-end}.preview-share,.preview-close{font-size:13px;padding:7px 10px!important}}

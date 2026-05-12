@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0f4c81">
   <title>PMM Pocket Web</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=015">
+  <link rel="stylesheet" href="styles.css?v=016">
 </head>
 <body>
   <div id="app">
@@ -66,6 +66,7 @@
             <div class="toolbar-actions centered-actions">
               <label class="secondary-btn small file-label">再読込<input id="fileInput2" type="file" accept="application/json,.json" hidden></label>
               <button id="saveBtn" class="primary-btn small" type="button">保存</button>
+              <button id="shareImportOpenBtn" class="secondary-btn small" type="button">共有データ読込</button>
               <button class="secondary-btn small" data-update-app type="button">最新版に更新</button>
             </div>
             <div class="toolbar-actions centered-actions helper-actions">
@@ -77,11 +78,11 @@
 
           <div class="home-grid">
             <button class="home-nav-card panel" type="button" data-tab-jump="self">
-              <span>自メンバーへ</span>
+              <span>自MAPへ</span>
               <strong id="homeSelfCount">0</strong>
             </button>
             <button class="home-nav-card panel" type="button" data-tab-jump="other">
-              <span>他メンバーへ</span>
+              <span>つながりへ</span>
               <strong id="homeOtherCount">0</strong>
             </button>
           </div>
@@ -89,7 +90,7 @@
 
         <section id="tab-self" class="tab-view">
           <div class="section-head self-head no-border">
-            <h2>自メンバー活動管理 <span id="selfCount" class="count"></span></h2>
+            <h2>自MAPメンバー活動管理 <span id="selfCount" class="count"></span></h2>
             <div class="section-actions">
               <button id="selfAddBtn" class="primary-btn small" type="button">追加</button>
               <button id="selfSaveBtn" class="secondary-btn small" type="button">保存</button>
@@ -101,7 +102,7 @@
 
         <section id="tab-other" class="tab-view">
           <div class="section-head">
-            <h2>他メンバー辞書 <span id="otherCount" class="count"></span></h2>
+            <h2>つながりメンバー辞書 <span id="otherCount" class="count"></span></h2>
             <div class="section-actions"><button id="otherAddBtn" class="primary-btn small" type="button">追加</button><button id="otherSaveBtn" class="secondary-btn small" type="button">保存</button></div>
           </div>
           <input id="otherSearch" class="search wide" type="search" placeholder="名前 所属 地域 タイトル メモで検索">
@@ -110,8 +111,8 @@
 
         <nav class="bottom-tabs" role="tablist" aria-label="画面切替">
           <button class="bottom-tab active" data-tab="home">トップ</button>
-          <button class="bottom-tab" data-tab="self">自メンバー</button>
-          <button class="bottom-tab" data-tab="other">他メンバー</button>
+          <button class="bottom-tab" data-tab="self">自MAP</button>
+          <button class="bottom-tab" data-tab="other">つながり</button>
         </nav>
       </section>
     </main>
@@ -156,7 +157,10 @@
   </dialog>
 
   <dialog id="previewDialog" class="preview-dialog">
-    <button type="button" class="ghost-btn preview-close" id="closePreviewBtn">閉じる</button>
+    <div class="preview-top-actions">
+      <button type="button" class="ghost-btn preview-share" id="sharePreviewPhotoBtn">写真を共有</button>
+      <button type="button" class="ghost-btn preview-close" id="closePreviewBtn">閉じる</button>
+    </div>
     <div class="preview-photo-wrap">
       <img id="previewImage" alt="顔写真プレビュー">
     </div>
@@ -217,6 +221,34 @@
 
 
 
+
+  <dialog id="shareImportDialog" class="share-import-dialog">
+    <div class="dialog-head">
+      <h3>共有データを読み込む</h3>
+      <button type="button" class="ghost-btn" id="shareImportCloseBtn">閉じる</button>
+    </div>
+    <div class="info-body">
+      <p class="notice">LINEやメールで届いたPMM共有テキストを、STARTからENDまで含めて貼り付けてください。</p>
+      <p class="save-note">※写真は読み込まれません。必要な場合は別途受け取ってください。</p>
+      <textarea id="shareImportText" class="share-import-text" placeholder="--- PMM MEMBER SHARE START ---"></textarea>
+      <div class="dialog-actions no-border">
+        <button type="button" id="shareImportReadBtn" class="primary-btn">読み込む</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="shareImportConfirmDialog" class="confirm-dialog share-confirm-dialog">
+    <div class="confirm-card">
+      <h3>共有データの保存</h3>
+      <div id="shareImportSummary" class="confirm-message-left"></div>
+      <div class="confirm-actions stacked">
+        <button type="button" id="shareSaveOtherBtn" class="primary-btn">つながりメンバーに保存</button>
+        <button type="button" id="shareSaveSelfBtn" class="secondary-btn">自MAPメンバーに保存</button>
+        <button type="button" id="shareSaveCancelBtn" class="ghost-btn">キャンセル</button>
+      </div>
+    </div>
+  </dialog>
+
   <dialog id="confirmDialog" class="confirm-dialog">
     <div class="confirm-card">
       <h3 id="confirmTitle">確認</h3>
@@ -229,6 +261,6 @@
   </dialog>
 
   <div id="toast" class="toast"></div>
-  <script src="app.js?v=015"></script>
+  <script src="app.js?v=016"></script>
 </body>
 </html>
