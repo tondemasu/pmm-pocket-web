@@ -1,7 +1,7 @@
 'use strict';
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
-const APP_VERSION = 'PMM Pocket Web v012';
+const APP_VERSION = 'PMM Pocket Web v013';
 const state = { data:null, fileName:'pmm_data.json', fileHandle:null, dirty:false, edit:{type:null,id:null,index:null}, previewTarget:null, photoTarget:null, crop:{img:null,scale:1,rotation:0,dx:0,dy:0,drag:false,lastX:0,lastY:0} };
 const typeLabels = ['P','PS','K','KS','K（要フォロー）','KS（要フォロー）'];
 const titleOptions = ['','ONE','GM','PM','ECM','DCM','PDCM'];
@@ -12,7 +12,7 @@ const progressFlags = [
   ['activity_flag_dreamlist','夢リスト'],['activity_flag_sevenbridge','センスオブブリッジ'],['activity_flag_listup','リストアップ'],['activity_flag_awpgrad','AWP卒業']
 ];
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
-async function forceUpdateApp(){try{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r=>r.unregister()));} if(window.caches){const ks=await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k)));} toast('最新版を読み込みます'); setTimeout(()=>{location.href=location.pathname+'?v=012&t='+Date.now();},350);}catch(e){location.href=location.pathname+'?v=012&t='+Date.now();}}
+async function forceUpdateApp(){try{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r=>r.unregister()));} if(window.caches){const ks=await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k)));} toast('最新版を読み込みます'); setTimeout(()=>{location.href=location.pathname+'?v=013&t='+Date.now();},350);}catch(e){location.href=location.pathname+'?v=013&t='+Date.now();}}
 function uid(){return (crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)).replace(/-/g,'')}
 function markDirty(v=true){state.dirty=v; $('#dirtyMark').textContent=v?'未書き出し':''}
 function escapeHtml(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
@@ -102,7 +102,37 @@ function saveEdit(){const fd=new FormData($('#editForm')); const type=state.edit
   if(type==='pending-new'){ if(!obj.pending_id)obj.pending_id=uid(); if(!obj.created_at)obj.created_at=new Date().toISOString().slice(0,19); obj.source='PMM Pocket Web'; state.data.pending_self_members.push(obj); }
   markDirty(); renderAll(); $('#editDialog').close(); toast('記入しました。最後にJSON書き出ししてください')
 }
-function deleteEdit(){const type=state.edit.type; if(type==='other'&&!confirm('削除してよろしいですか？'))return; if(type==='other')state.data.other_members.splice(state.edit.index,1); if(type==='pending')state.data.pending_self_members.splice(state.edit.index,1); markDirty();renderAll();$('#editDialog').close();toast('削除しました')}
+function editTargetName(){
+  const type=state.edit.type;
+  let obj=null;
+  if(type==='self') obj=state.data.members[state.edit.id];
+  else if(type==='other') obj=state.data.other_members[state.edit.index];
+  else if(type==='pending') obj=state.data.pending_self_members[state.edit.index];
+  return (obj?.name || obj?.member_name || obj?.full_name || 'このメンバー').trim() || 'このメンバー';
+}
+function askConfirmDelete(name){
+  return new Promise(resolve=>{
+    const d=$('#confirmDialog');
+    $('#confirmTitle').textContent='削除の確認';
+    $('#confirmMessage').textContent=`「${name}」を削除してよろしいですか？`;
+    const ok=$('#confirmOkBtn'), cancel=$('#confirmCancelBtn');
+    const cleanup=(v)=>{ok.onclick=null;cancel.onclick=null;d.oncancel=null; if(d.open)d.close(); resolve(v);};
+    ok.onclick=()=>cleanup(true);
+    cancel.onclick=()=>cleanup(false);
+    d.oncancel=(e)=>{e.preventDefault(); cleanup(false);};
+    d.showModal();
+  });
+}
+async function deleteEdit(){
+  const type=state.edit.type;
+  if(type==='other'){
+    const ok=await askConfirmDelete(editTargetName());
+    if(!ok)return;
+    state.data.other_members.splice(state.edit.index,1);
+  }
+  if(type==='pending')state.data.pending_self_members.splice(state.edit.index,1);
+  markDirty();renderAll();$('#editDialog').close();toast('削除しました。最後にJSON書き出ししてください')
+}
 function openPhoto(){state.photoTarget={...state.edit}; resetCrop(); $('#photoDialog').showModal(); drawCrop()}
 function resetCrop(){state.crop={img:null,scale:1,rotation:0,dx:0,dy:0,drag:false,lastX:0,lastY:0}; $('#zoomRange').value=1}
 function getCurrentObj(){const t=state.edit.type;if(t==='self')return state.data.members[state.edit.id]; if(t==='other')return state.data.other_members[state.edit.index]; if(t==='pending')return state.data.pending_self_members[state.edit.index]; return null}
@@ -175,6 +205,6 @@ function init(){ if(localStorage.getItem('pmmPocketDark')==='1')document.body.cl
  document.addEventListener('click',e=>{ if(e.target?.id==='photoEditBtn')openPhoto(); if(e.target?.id==='photoRemoveBtn'){setCurrentPhoto(''); $('#editDialog').close(); toast('写真を削除しました。最後にJSON書き出ししてください')}});
  $('#closePhotoBtn').onclick=()=>$('#photoDialog').close(); $('#photoFileInput').onchange=e=>loadCropFile(e.target.files[0]); $('#photoCameraInput').onchange=e=>loadCropFile(e.target.files[0]); $('#rotatePhotoBtn').onclick=()=>{state.crop.rotation=(state.crop.rotation+90)%360;drawCrop()}; $('#clearPhotoBtn').onclick=()=>{setCurrentPhoto('');$('#photoDialog').close();$('#editDialog').close();toast('写真を削除しました。最後にJSON書き出ししてください')}; $('#applyPhotoBtn').onclick=applyPhoto; $('#zoomRange').oninput=e=>{state.crop.scale=Number(e.target.value);drawCrop()};
  const cw=$('.crop-wrap'); cw.addEventListener('pointerdown',e=>{state.crop.drag=true;state.crop.lastX=e.clientX;state.crop.lastY=e.clientY;cw.setPointerCapture(e.pointerId)}); cw.addEventListener('pointermove',e=>{if(!state.crop.drag)return;state.crop.dx+=e.clientX-state.crop.lastX;state.crop.dy+=e.clientY-state.crop.lastY;state.crop.lastX=e.clientX;state.crop.lastY=e.clientY;drawCrop()}); cw.addEventListener('pointerup',()=>state.crop.drag=false);
- if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=012').then(r=>r.update()).catch(()=>{})}
+ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=013').then(r=>r.update()).catch(()=>{})}
 }
 document.addEventListener('DOMContentLoaded',init);

@@ -124,9 +124,32 @@ dialog{border:0;border-radius:22px;padding:0;background:var(--panel);color:var(-
 .self-edit-pane h4{margin:8px 0 12px;font-size:17px}
 @media(max-width:640px){.self-edit-tabs{top:0}.self-edit-tab{padding:11px 8px}}
 
-/* v012: merge pending into self list */
+/* v013: merge pending into self list */
 .section-actions{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
 .self-head.no-border{border-top:0!important;padding-top:0!important}
 .new-prefix{display:inline-grid;place-items:center;margin-right:8px;border:1px solid #60a5fa;color:#bfdbfe;background:rgba(96,165,250,.14);border-radius:999px;font-size:12px;font-weight:900;min-width:26px;height:24px;vertical-align:middle}
 .new-member-card{border-color:rgba(96,165,250,.45)!important;background:linear-gradient(180deg,rgba(96,165,250,.10),rgba(96,165,250,.04)),var(--panel)!important}
 @media(max-width:640px){.section-head .section-actions{width:100%;display:grid;grid-template-columns:1fr 1fr}.section-actions .small{width:100%}}
+
+
+/* v013 custom delete confirmation */
+.confirm-dialog{
+  border:0;
+  padding:0;
+  background:transparent;
+  width:min(92vw,420px);
+}
+.confirm-dialog::backdrop{background:rgba(0,0,0,.55)}
+.confirm-card{
+  background:var(--panel);
+  color:var(--text);
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:22px;
+  box-shadow:0 20px 60px rgba(0,0,0,.35);
+}
+.confirm-card h3{margin:0 0 12px;font-size:22px}
+.confirm-card p{margin:0 0 20px;line-height:1.7;color:var(--text);font-weight:700;white-space:pre-wrap}
+.confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.confirm-actions button{width:100%;min-height:48px}
+@media(max-width:420px){.confirm-actions{grid-template-columns:1fr}.confirm-card{padding:20px}}
