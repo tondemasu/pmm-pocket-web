@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0f4c81">
   <title>PMM Pocket Web</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=020">
+  <link rel="stylesheet" href="styles.css?v=021">
 </head>
 <body>
   <div id="app">
@@ -15,7 +15,7 @@
         <img src="assets/icon-192.png" alt="PMM" class="brand-icon">
         <div>
           <div class="brand-title">PMM Pocket Web</div>
-          <div class="brand-sub">PMMスマホ版 v020</div>
+          <div class="brand-sub">PMMスマホ版 v021</div>
         </div>
       </div>
       <button id="darkToggle" class="ghost-btn" type="button" data-dark-toggle>ダーク</button>
@@ -26,7 +26,7 @@
         <div class="start-brand">
           <img src="assets/icon-192.png" alt="PMM" class="start-icon">
           <h1>PMM Pocket Web</h1>
-          <div class="start-version">PMMスマホ版 v020</div>
+          <div class="start-version">PMMスマホ版 v021</div>
         </div>
         <p class="notice">
           PC版PMMとWeb版で同じ保存ファイルを同時に編集すると 上書き事故の原因になります<br>
@@ -56,7 +56,7 @@
               <img src="assets/icon-192.png" alt="PMM" class="brand-icon">
               <div>
                 <div class="brand-title">PMM Pocket Web</div>
-                <div class="brand-sub">PMMスマホ版 v020</div>
+                <div class="brand-sub">PMMスマホ版 v021</div>
               </div>
             </div>
             <p class="notice small-notice">PC版PMMを閉じてから使ってください</p>
@@ -70,14 +70,6 @@
               <button id="shareImportOpenBtn" class="secondary-btn small" type="button">共有データ読込</button>
               <button class="secondary-btn small" data-update-app type="button">最新版に更新</button>
             </div>
-            <div class="toolbar-actions centered-actions helper-actions">
-              <button class="secondary-btn small" data-dark-toggle type="button">ダーク切替</button>
-              <button class="secondary-btn small" data-dialog="help" type="button">ヘルプ</button>
-              <button class="secondary-btn small" data-dialog="about" type="button">このアプリについて</button>
-              <button class="secondary-btn small" data-dialog="downloads" type="button">PC版PMM</button>
-              <button class="secondary-btn small" data-dialog="install-ios" type="button">iPhoneホーム追加</button>
-              <button class="secondary-btn small" data-dialog="install-android" type="button">Androidホーム追加</button>
-            </div>
           </div>
 
           <div class="home-grid">
@@ -89,6 +81,15 @@
               <span>つながりへ</span>
               <strong id="homeOtherCount">0</strong>
             </button>
+          </div>
+
+          <div class="home-link-area panel">
+            <button class="link-btn" data-dark-toggle type="button">ダーク切替</button>
+            <button class="link-btn" data-dialog="help" type="button">ヘルプ</button>
+            <button class="link-btn" data-dialog="about" type="button">このアプリについて</button>
+            <button class="link-btn" data-dialog="downloads" type="button">PC版PMM</button>
+            <button class="link-btn" data-dialog="install-ios" type="button">iPhoneホーム追加</button>
+            <button class="link-btn" data-dialog="install-android" type="button">Androidホーム追加</button>
           </div>
         </section>
 
@@ -200,7 +201,7 @@
     </div>
     <div class="save-body">
       <p class="notice">PC版PMMで開くための保存ファイルを作ります。</p>
-      <p class="save-note strong-note">iPhoneやAndroidでは、次の画面で保存先を選べます。<br>ファイル / iCloud Drive / Googleドライブ などを選んで保存してください。</p>
+      <p class="save-note strong-note">iPhone Safariでは共有画面が開く場合があります。<br>「ファイルに保存」を選んで iCloud Drive などに保存してください。<br>黒いプレビュー画面になった場合は、下部の共有ボタンから「ファイルに保存」を選んでください。</p>
       <div class="save-current">現在のファイル名：<strong id="saveCurrentName">pmm_data.json</strong></div>
       <div class="save-actions">
         <button type="button" id="saveSameBtn" class="primary-btn">同じ名前で保存</button>
@@ -279,6 +280,6 @@
   </dialog>
 
   <div id="toast" class="toast"></div>
-  <script src="app.js?v=020"></script>
+  <script src="app.js?v=021"></script>
 </body>
 </html>
