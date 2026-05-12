@@ -1,7 +1,7 @@
 'use strict';
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
-const APP_VERSION = 'PMM Pocket Web v018';
+const APP_VERSION = 'PMM Pocket Web v020';
 const state = { data:null, fileName:'pmm_data.json', fileHandle:null, dirty:false, edit:{type:null,id:null,index:null}, previewTarget:null, photoTarget:null, crop:{img:null,scale:1,rotation:0,dx:0,dy:0,drag:false,lastX:0,lastY:0} };
 const typeLabels = ['P','PS','K','KS','K（要フォロー）','KS（要フォロー）'];
 const titleOptions = ['','20p','50p','ONE','GM','PM','ECM','DCM','PDCM'];
@@ -12,7 +12,7 @@ const progressFlags = [
   ['activity_flag_dreamlist','夢リスト'],['activity_flag_sevenbridge','センスオブブリッジ'],['activity_flag_listup','リストアップ'],['activity_flag_awpgrad','AWP卒業']
 ];
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
-async function forceUpdateApp(){try{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r=>r.unregister()));} if(window.caches){const ks=await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k)));} toast('最新版を読み込みます'); setTimeout(()=>{location.href=location.pathname+'?v=018&t='+Date.now();},350);}catch(e){location.href=location.pathname+'?v=018&t='+Date.now();}}
+async function forceUpdateApp(){try{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r=>r.unregister()));} if(window.caches){const ks=await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k)));} toast('最新版を読み込みます'); setTimeout(()=>{location.href=location.pathname+'?v=020&t='+Date.now();},350);}catch(e){location.href=location.pathname+'?v=020&t='+Date.now();}}
 function uid(){return (crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)).replace(/-/g,'')}
 function markDirty(v=true){state.dirty=v; $('#dirtyMark').textContent=v?'未保存':''}
 function escapeHtml(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
@@ -117,6 +117,18 @@ function parseShareText(text){
 function openShareImportDialog(){
   $('#shareImportText').value='';
   $('#shareImportDialog').showModal();
+}
+
+async function pasteShareImportText(){
+  const ta=$('#shareImportText');
+  try{
+    if(navigator.clipboard && navigator.clipboard.readText){
+      const txt=await navigator.clipboard.readText();
+      if(txt){ta.value=txt; toast('貼り付けました'); return;}
+    }
+  }catch(e){}
+  ta.focus();
+  toast('貼り付け欄を長押しして貼り付けてください');
 }
 function showShareImportConfirm(payload){
   pendingSharePayload=payload;
@@ -239,30 +251,10 @@ function formInput(label,name,value='',type='text'){return `<div class="form-row
 function formText(label,name,value=''){return `<div class="form-row"><label>${label}</label><textarea name="${name}">${escapeHtml(value)}</textarea></div>`}
 function displayChoiceValue(v){return v ? v : '未設定'}
 function formSelect(label,name,value='',opts=[]){
-  const optAttr = escapeHtml(JSON.stringify(opts));
-  return `<div class="form-row choice-row"><label>${label}</label><input type="hidden" name="${name}" value="${escapeHtml(value)}"><button type="button" class="choice-select-btn" data-choice-select="1" data-choice-name="${name}" data-choice-label="${escapeHtml(label)}" data-choice-options="${optAttr}"><span>${escapeHtml(displayChoiceValue(value))}</span><span class="choice-chevron">⌄</span></button></div>`
+  return `<div class="form-row"><label>${label}</label><select name="${name}" class="native-select">${opts.map(o=>`<option value="${escapeHtml(o)}" ${o===value?'selected':''}>${escapeHtml(displayChoiceValue(o))}</option>`).join('')}</select></div>`
 }
-function openChoiceSheet(btn){
-  let opts=[];
-  try{opts=JSON.parse(btn.dataset.choiceOptions||'[]')}catch(e){opts=[]}
-  const input=btn.closest('.choice-row')?.querySelector('input[type="hidden"]');
-  const current=input?.value||'';
-  const d=$('#choiceDialog');
-  $('#choiceTitle').textContent=btn.dataset.choiceLabel||'選択';
-  const list=$('#choiceList');
-  list.innerHTML=opts.map((o,i)=>`<button type="button" class="choice-option ${o===current?'selected':''}" data-choice-index="${i}"><span>${escapeHtml(displayChoiceValue(o))}</span>${o===current?'<span>✓</span>':''}</button>`).join('');
-  state.choice={button:btn,input,opts};
-  d.showModal();
-}
-function chooseSheetValue(index){
-  const c=state.choice;
-  if(!c)return;
-  const value=c.opts[Number(index)] ?? '';
-  if(c.input)c.input.value=value;
-  const span=c.button?.querySelector('span');
-  if(span)span.textContent=displayChoiceValue(value);
-  $('#choiceDialog').close();
-}
+function openChoiceSheet(btn){ return; }
+function chooseSheetValue(index){ return; }
 
 function progressHtml(obj){return `<div class="form-row"><label>進捗チェック</label><div class="checks">${progressFlags.map(([k,l])=>`<label><input type="checkbox" name="${k}" ${obj?.[k]?'checked':''}> ${l}</label>`).join('')}</div></div>`}
 function photoBlock(obj){return `<div class="photo-row">${makeAvatar(obj.photo_data,obj.name,true)}<div class="photo-actions"><button type="button" class="secondary-btn small" id="photoEditBtn">写真登録</button><button type="button" class="danger-btn small" id="photoRemoveBtn">写真削除</button></div></div>`}
@@ -378,22 +370,23 @@ function savePreviewMemo(){
   toast('メモを記入しました。最後に保存してください');
 }
 
-function showInfo(kind){const help=`<p><strong>使い方</strong></p><ol><li>PC版PMMを閉じます</li><li>保存ファイル読込でPMM保存ファイルを読み込みます</li><li>自MAPメンバー活動管理やつながりメンバー辞書を編集します</li><li>最後に保存ボタンでPC版PMM用の保存ファイルを作成します</li><li>PC版PMMで保存したファイルを開きます</li></ol><p>このWeb版はデータをサーバーへ保存しません。読み込んだJSONはブラウザ内で処理します。</p>`;
- const about=`<p><strong>PMM Pocket Web</strong><br>${APP_VERSION}</p><p>PC版PMMで作成したJSONをスマホやPCブラウザで確認・編集する補助ツールです。</p><p>お問い合わせ先：兵藤 茂樹<br>LINE: https://line.me/ti/p/XJt7xbeJ1j</p>`;
- const ios=`<p><strong>iPhoneでホーム画面に追加</strong></p><ol><li>Safariでこのページを開きます</li><li>画面下または上の共有ボタンを押します</li><li><strong>ホーム画面に追加</strong>を選びます</li><li>追加を押すとアプリのように開けます</li></ol><p>Safari以外では表示が違う場合があります。</p>`;
- const android=`<p><strong>Androidでホーム画面に追加</strong></p><ol><li>Chromeでこのページを開きます</li><li>右上の︙メニューを押します</li><li><strong>ホーム画面に追加</strong> または <strong>アプリをインストール</strong> を選びます</li><li>追加を押すとアプリのように開けます</li></ol>`;
- const map={help:['ヘルプ',help],about:['このアプリについて',about],'install-ios':['iPhoneホーム追加',ios],'install-android':['Androidホーム追加',android]};
+function showInfo(kind){const help=`<p><strong>推奨環境</strong></p><ul><li>iPhoneは <strong>Safari</strong> でお使いください</li><li>Androidは <strong>Chrome</strong> でお使いください</li></ul><p>iPhoneのChromeでは、保存ファイルが「このiPhone内 → Chrome」に入りやすく、iCloud Driveへ直接保存しにくい場合があります。iCloud Driveで管理したい場合はSafariでの利用をおすすめします。</p><p><strong>基本の使い方</strong></p><ol><li>PC版PMMを閉じます</li><li>保存ファイル読込でPMM保存ファイルを読み込みます</li><li>自MAPメンバー活動管理やつながりメンバー辞書を編集します</li><li>最後に保存ボタンでPC版PMM用の保存ファイルを作成します</li><li>PC版PMMで保存したファイルを開きます</li></ol><p>このWeb版はデータをサーバーへ保存しません。読み込んだJSONはブラウザ内で処理します。</p>`;
+ const about=`<p><strong>PMM Pocket Web</strong><br>${APP_VERSION}</p><p>PMM Pocket Webは、PC版PMMの補助として使う現場用ツールです。</p><p>PMM本体は、全体管理・MAP管理・ポイント計算・作戦立案を担当します。</p><p>Pocket Webは、現場で会ったメンバーの備忘録、写真、メモ、つながりメンバーの情報整理、要フォロー者の活動管理に特化します。</p><p>共有JSONに写真は含めません。写真は必要に応じて写真プレビューの「写真を共有」からLINE等で別送してください。</p><p>お問い合わせ先：兵藤 茂樹<br><a href="https://line.me/ti/p/XJt7xbeJ1j" target="_blank" rel="noopener">LINEで問い合わせる</a></p>`;
+ const ios=`<p><strong>iPhoneでホーム画面に追加</strong></p><ol><li>Safariでこのページを開きます</li><li>画面下または上の共有ボタンを押します</li><li><strong>ホーム画面に追加</strong>を選びます</li><li>追加を押すとアプリのように開けます</li></ol><p>iPhoneではSafari推奨です。Chromeでは保存先が「このiPhone内 → Chrome」になりやすいです。</p>`;
+ const android=`<p><strong>Androidでホーム画面に追加</strong></p><ol><li>Chromeでこのページを開きます</li><li>右上の︙メニューを押します</li><li><strong>ホーム画面に追加</strong> または <strong>アプリをインストール</strong> を選びます</li><li>追加を押すとアプリのように開けます</li></ol><p>AndroidではChrome推奨です。</p>`;
+ const downloads=`<p><strong>PC版PMMダウンロード</strong></p><p>将来的に、ここにPC版PMMのダウンロード先を表示します。</p><ul><li>Windows版：準備中</li><li>Mac版：準備中</li></ul><p>現在はまだ配布リンク未設定です。</p>`;
+ const map={help:['ヘルプ',help],about:['このアプリについて',about],downloads:['PC版PMMダウンロード',downloads],'install-ios':['iPhoneホーム追加',ios],'install-android':['Androidホーム追加',android]};
  const item=map[kind]||map.help; $('#infoTitle').textContent=item[0]; $('#infoBody').innerHTML=item[1]; $('#infoDialog').showModal(); }
 function init(){ if(localStorage.getItem('pmmPocketDark')==='1')document.body.classList.add('dark'); const toggleDark=()=>{document.body.classList.toggle('dark');localStorage.setItem('pmmPocketDark',document.body.classList.contains('dark')?'1':'0')}; $$('[data-dark-toggle]').forEach(btn=>btn.onclick=toggleDark);
  ['fileInput','fileInput2'].forEach(id=>{$('#'+id).onchange=async e=>{const f=e.target.files[0]; if(!f)return; const ok=await openFileNotice(f.name); if(ok) await readJsonFile(f); e.target.value='';}});
- $('#newDataBtn').onclick=()=>{state.data=emptyData();state.fileName='pmm_data.json';$('#loadedName').textContent=state.fileName;$('#startView').classList.add('hidden');$('#mainView').classList.remove('hidden');renderAll();markDirty(false)}; $('#saveBtn').onclick=writeJson; $('#shareImportOpenBtn').onclick=openShareImportDialog; $('#shareImportCloseBtn').onclick=()=>$('#shareImportDialog').close(); $('#shareImportReadBtn').onclick=()=>{try{showShareImportConfirm(parseShareText($('#shareImportText').value));}catch(e){toast('共有データを読み込めません');}}; $('#shareSaveOtherBtn').onclick=()=>importSharedMember('other'); $('#shareSaveSelfBtn').onclick=()=>importSharedMember('self'); $('#shareSaveCancelBtn').onclick=()=>$('#shareImportConfirmDialog').close();
+ $('#newDataBtn').onclick=()=>{state.data=emptyData();state.fileName='pmm_data.json';$('#loadedName').textContent=state.fileName;$('#startView').classList.add('hidden');$('#mainView').classList.remove('hidden');renderAll();markDirty(false)}; $('#saveBtn').onclick=writeJson; $('#shareImportOpenBtn').onclick=openShareImportDialog; $('#shareImportCloseBtn').onclick=()=>$('#shareImportDialog').close(); const pasteBtn=$('#shareImportPasteBtn'); if(pasteBtn) pasteBtn.onclick=pasteShareImportText; $('#shareImportReadBtn').onclick=()=>{try{showShareImportConfirm(parseShareText($('#shareImportText').value));}catch(e){toast('共有データを読み込めません');}}; $('#shareSaveOtherBtn').onclick=()=>importSharedMember('other'); $('#shareSaveSelfBtn').onclick=()=>importSharedMember('self'); $('#shareSaveCancelBtn').onclick=()=>$('#shareImportConfirmDialog').close();
  $$('.bottom-tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
  $('#selfSearch').oninput=renderSelf; $('#otherSearch').oninput=renderOther; const ps=$('#pendingSearch'); if(ps) ps.oninput=renderPending; $('#otherAddBtn').onclick=()=>openEdit('other-new'); const pa=$('#pendingAddBtn'); if(pa) pa.onclick=()=>openEdit('pending-new'); const sa=$('#selfAddBtn'); if(sa) sa.onclick=()=>openEdit('pending-new'); const ss=$('#selfSaveBtn'); if(ss) ss.onclick=writeJson; const os=$('#otherSaveBtn'); if(os) os.onclick=writeJson;
- document.body.addEventListener('click',e=>{const cb=e.target.closest('[data-choice-select]'); if(cb){openChoiceSheet(cb); return;} const st=e.target.closest('[data-self-edit-tab]'); if(st){const name=st.dataset.selfEditTab; $$('.self-edit-tab').forEach(x=>x.classList.toggle('active',x.dataset.selfEditTab===name)); $$('.self-edit-pane').forEach(x=>x.classList.toggle('active',x.dataset.selfEditPane===name)); return;} const u=e.target.closest('[data-update-app]'); if(u) forceUpdateApp(); const p=e.target.closest('[data-preview]'); if(p) preview(p.dataset.preview, p); const s=e.target.closest('[data-edit-self]'); if(s)openEdit('self',s.dataset.editSelf); const sh=e.target.closest('[data-share-other]'); if(sh){shareOther(sh.dataset.shareOther); return;} const ssr=e.target.closest('[data-share-self]'); if(ssr){shareSelf(ssr.dataset.shareSelf); return;} const spr=e.target.closest('[data-share-pending]'); if(spr){sharePending(spr.dataset.sharePending); return;} const o=e.target.closest('[data-edit-other]'); if(o)openEdit('other',o.dataset.editOther); const pn=e.target.closest('[data-edit-pending]'); if(pn)openEdit('pending',pn.dataset.editPending); const j=e.target.closest('[data-tab-jump]'); if(j)switchTab(j.dataset.tabJump); const l=e.target.closest('[data-dialog]'); if(l)showInfo(l.dataset.dialog);});
- $('#closeEditBtn').onclick=()=>$('#editDialog').close(); $('#choiceCloseBtn').onclick=()=>$('#choiceDialog').close(); $('#choiceList').onclick=e=>{const opt=e.target.closest('[data-choice-index]'); if(opt) chooseSheetValue(opt.dataset.choiceIndex);}; document.addEventListener('click',e=>{if(e.target?.id==='otherShareBtn' && state.edit.type?.includes('other')) shareOther(state.edit.index);}); $('#editSaveBtn').onclick=saveEdit; $('#editSaveTopBtn').onclick=saveEdit; $('#deleteBtn').onclick=deleteEdit; $('#closeInfoBtn').onclick=()=>$('#infoDialog').close(); $('#saveCloseBtn').onclick=()=>$('#saveDialog').close(); $('#saveSameBtn').onclick=()=>{downloadJsonAs(state.fileName); $('#saveDialog').close();}; $('#saveRenameBtn').onclick=()=>{$('#saveRenameBox').classList.remove('hidden'); $('#saveFileNameInput').focus();}; $('#saveWithNameBtn').onclick=()=>{downloadJsonAs($('#saveFileNameInput').value); $('#saveDialog').close();}; $('#closePreviewBtn').onclick=()=>$('#previewDialog').close(); $('#sharePreviewPhotoBtn').onclick=sharePreviewPhoto; $('#previewMemoSaveBtn').onclick=savePreviewMemo;
+ document.body.addEventListener('click',e=>{const st=e.target.closest('[data-self-edit-tab]'); if(st){const name=st.dataset.selfEditTab; $$('.self-edit-tab').forEach(x=>x.classList.toggle('active',x.dataset.selfEditTab===name)); $$('.self-edit-pane').forEach(x=>x.classList.toggle('active',x.dataset.selfEditPane===name)); return;} const u=e.target.closest('[data-update-app]'); if(u) forceUpdateApp(); const p=e.target.closest('[data-preview]'); if(p) preview(p.dataset.preview, p); const s=e.target.closest('[data-edit-self]'); if(s)openEdit('self',s.dataset.editSelf); const sh=e.target.closest('[data-share-other]'); if(sh){shareOther(sh.dataset.shareOther); return;} const ssr=e.target.closest('[data-share-self]'); if(ssr){shareSelf(ssr.dataset.shareSelf); return;} const spr=e.target.closest('[data-share-pending]'); if(spr){sharePending(spr.dataset.sharePending); return;} const o=e.target.closest('[data-edit-other]'); if(o)openEdit('other',o.dataset.editOther); const pn=e.target.closest('[data-edit-pending]'); if(pn)openEdit('pending',pn.dataset.editPending); const j=e.target.closest('[data-tab-jump]'); if(j)switchTab(j.dataset.tabJump); const l=e.target.closest('[data-dialog]'); if(l)showInfo(l.dataset.dialog);});
+ $('#closeEditBtn').onclick=()=>$('#editDialog').close(); const choiceClose=$('#choiceCloseBtn'); if(choiceClose) choiceClose.onclick=()=>$('#choiceDialog').close(); const choiceList=$('#choiceList'); if(choiceList) choiceList.onclick=e=>{const opt=e.target.closest('[data-choice-index]'); if(opt) chooseSheetValue(opt.dataset.choiceIndex);}; document.addEventListener('click',e=>{if(e.target?.id==='otherShareBtn' && state.edit.type?.includes('other')) shareOther(state.edit.index);}); $('#editSaveBtn').onclick=saveEdit; $('#editSaveTopBtn').onclick=saveEdit; $('#deleteBtn').onclick=deleteEdit; $('#closeInfoBtn').onclick=()=>$('#infoDialog').close(); $('#saveCloseBtn').onclick=()=>$('#saveDialog').close(); $('#saveSameBtn').onclick=()=>{downloadJsonAs(state.fileName); $('#saveDialog').close();}; $('#saveRenameBtn').onclick=()=>{$('#saveRenameBox').classList.remove('hidden'); $('#saveFileNameInput').focus();}; $('#saveWithNameBtn').onclick=()=>{downloadJsonAs($('#saveFileNameInput').value); $('#saveDialog').close();}; $('#closePreviewBtn').onclick=()=>$('#previewDialog').close(); $('#sharePreviewPhotoBtn').onclick=sharePreviewPhoto; $('#previewMemoSaveBtn').onclick=savePreviewMemo;
  document.addEventListener('click',e=>{ if(e.target?.id==='photoEditBtn')openPhoto(); if(e.target?.id==='photoRemoveBtn'){setCurrentPhoto(''); $('#editDialog').close(); toast('写真を削除しました。最後に保存してください')}});
  $('#closePhotoBtn').onclick=()=>$('#photoDialog').close(); $('#photoFileInput').onchange=e=>loadCropFile(e.target.files[0]); $('#photoCameraInput').onchange=e=>loadCropFile(e.target.files[0]); $('#rotatePhotoBtn').onclick=()=>{state.crop.rotation=(state.crop.rotation+90)%360;drawCrop()}; $('#clearPhotoBtn').onclick=()=>{setCurrentPhoto('');$('#photoDialog').close();$('#editDialog').close();toast('写真を削除しました。最後に保存してください')}; $('#applyPhotoBtn').onclick=applyPhoto; $('#zoomRange').oninput=e=>{state.crop.scale=Number(e.target.value);drawCrop()};
  const cw=$('.crop-wrap'); cw.addEventListener('pointerdown',e=>{state.crop.drag=true;state.crop.lastX=e.clientX;state.crop.lastY=e.clientY;cw.setPointerCapture(e.pointerId)}); cw.addEventListener('pointermove',e=>{if(!state.crop.drag)return;state.crop.dx+=e.clientX-state.crop.lastX;state.crop.dy+=e.clientY-state.crop.lastY;state.crop.lastX=e.clientX;state.crop.lastY=e.clientY;drawCrop()}); cw.addEventListener('pointerup',()=>state.crop.drag=false);
- if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=018').then(r=>r.update()).catch(()=>{})}
+ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=020').then(r=>r.update()).catch(()=>{})}
 }
 document.addEventListener('DOMContentLoaded',init);
