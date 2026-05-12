@@ -187,7 +187,7 @@ body.dark .new-prefix{
 .save-body .notice{line-height:1.65;}
 
 
-/* v016 additions */
+/* v018 additions */
 .point-summary{display:inline-block;margin-left:4px;font-size:12px;color:var(--muted)}
 .share-text{white-space:pre-wrap;word-break:break-all;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;max-height:42dvh;overflow:auto}
 .share-import-dialog{width:min(640px,96vw)}
@@ -199,3 +199,70 @@ body.dark .new-prefix{
 .preview-share,.preview-close{position:static!important;color:#fff!important;background:rgba(15,23,42,.78)!important;border-color:rgba(255,255,255,.35)!important;min-height:36px!important;padding:7px 12px!important}
 #confirmMessage{white-space:pre-line}
 @media(max-width:640px){.preview-top-actions{right:8px;left:8px;justify-content:flex-end}.preview-share,.preview-close{font-size:13px;padding:7px 10px!important}}
+
+/* v018: app-like choice sheet */
+.choice-select-btn{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:10px 12px;
+  min-height:44px;
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  text-align:left;
+}
+.choice-select-btn span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.choice-chevron{color:var(--muted);font-weight:800;font-size:18px;line-height:1;}
+.choice-dialog{
+  width:100vw;
+  max-width:none;
+  height:100dvh;
+  max-height:none;
+  margin:0;
+  padding:0;
+  border-radius:0;
+  background:transparent;
+}
+.choice-dialog::backdrop{background:rgba(0,0,0,.45);}
+.choice-sheet{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  background:var(--panel);
+  color:var(--text);
+  border-top:1px solid var(--line);
+  border-radius:24px 24px 0 0;
+  padding:10px 16px calc(env(safe-area-inset-bottom) + 18px);
+  box-shadow:0 -18px 50px rgba(0,0,0,.35);
+  max-height:72dvh;
+  overflow:auto;
+  animation:choiceSlideUp .18s ease-out;
+}
+@keyframes choiceSlideUp{from{transform:translateY(28px);opacity:.65}to{transform:translateY(0);opacity:1}}
+.choice-handle{width:44px;height:5px;border-radius:999px;background:var(--line);margin:0 auto 10px;}
+.choice-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
+.choice-head h3{margin:0;font-size:18px;}
+.choice-list{display:grid;gap:8px;}
+.choice-option{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:var(--bg);
+  color:var(--text);
+  min-height:48px;
+  padding:12px 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  font-weight:700;
+  text-align:left;
+}
+.choice-option.selected{border-color:var(--primary);background:rgba(15,76,129,.14);color:var(--primary);}
+body.dark .choice-option.selected{background:rgba(99,179,237,.18);}
+@media(min-width:720px){.choice-sheet{left:50%;right:auto;transform:translateX(-50%);width:min(560px,92vw);border-radius:24px;margin-bottom:18px;}.choice-dialog[open] .choice-sheet{animation:choiceSlideUpDesktop .18s ease-out}@keyframes choiceSlideUpDesktop{from{transform:translateX(-50%) translateY(28px);opacity:.65}to{transform:translateX(-50%) translateY(0);opacity:1}}}
