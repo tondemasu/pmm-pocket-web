@@ -153,3 +153,15 @@ dialog{border:0;border-radius:22px;padding:0;background:var(--panel);color:var(-
 .confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .confirm-actions button{width:100%;min-height:48px}
 @media(max-width:420px){.confirm-actions{grid-template-columns:1fr}.confirm-card{padding:20px}}
+
+/* v014 save dialog */
+.section-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.save-dialog{width:min(560px,94vw);}
+.save-body{padding:16px;display:grid;gap:14px;}
+.save-current{font-size:14px;color:var(--muted);word-break:break-all;}
+.save-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.save-rename-box{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:12px;}
+.save-rename-box label{font-weight:700;}
+.save-rename-box input{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--bg);color:var(--text);}
+.save-note{font-size:13px;color:var(--muted);line-height:1.6;margin:0;}
+@media(max-width:560px){.save-actions{grid-template-columns:1fr}.section-head{align-items:flex-start}.section-actions{width:100%;display:grid;grid-template-columns:1fr 1fr}.section-actions .small{width:100%;}}

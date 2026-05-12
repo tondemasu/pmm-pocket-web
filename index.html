@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0f4c81">
   <title>PMM Pocket Web</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=012">
+  <link rel="stylesheet" href="styles.css?v=014">
 </head>
 <body>
   <div id="app">
@@ -15,7 +15,7 @@
         <img src="assets/icon-192.png" alt="PMM" class="brand-icon">
         <div>
           <div class="brand-title">PMM Pocket Web</div>
-          <div class="brand-sub">PMMスマホ版 v013</div>
+          <div class="brand-sub">PMMスマホ版 v014</div>
         </div>
       </div>
       <button id="darkToggle" class="ghost-btn" type="button" data-dark-toggle>ダーク</button>
@@ -26,7 +26,7 @@
         <div class="start-brand">
           <img src="assets/icon-192.png" alt="PMM" class="start-icon">
           <h1>PMM Pocket Web</h1>
-          <div class="start-version">PMMスマホ版 v013</div>
+          <div class="start-version">PMMスマホ版 v014</div>
         </div>
         <p class="notice">
           PC版PMMとWeb版で同じ保存ファイルを同時に編集すると 上書き事故の原因になります<br>
@@ -55,7 +55,7 @@
               <img src="assets/icon-192.png" alt="PMM" class="brand-icon">
               <div>
                 <div class="brand-title">PMM Pocket Web</div>
-                <div class="brand-sub">PMMスマホ版 v013</div>
+                <div class="brand-sub">PMMスマホ版 v014</div>
               </div>
             </div>
             <p class="notice small-notice">PC版PMMを閉じてから使ってください</p>
@@ -65,7 +65,7 @@
             </div>
             <div class="toolbar-actions centered-actions">
               <label class="secondary-btn small file-label">再読込<input id="fileInput2" type="file" accept="application/json,.json" hidden></label>
-              <button id="saveBtn" class="primary-btn small" type="button">JSON書き出し</button>
+              <button id="saveBtn" class="primary-btn small" type="button">保存</button>
               <button class="secondary-btn small" data-update-app type="button">最新版に更新</button>
             </div>
             <div class="toolbar-actions centered-actions helper-actions">
@@ -102,7 +102,7 @@
         <section id="tab-other" class="tab-view">
           <div class="section-head">
             <h2>他メンバー辞書 <span id="otherCount" class="count"></span></h2>
-            <button id="otherAddBtn" class="primary-btn small" type="button">追加</button>
+            <div class="section-actions"><button id="otherAddBtn" class="primary-btn small" type="button">追加</button><button id="otherSaveBtn" class="secondary-btn small" type="button">保存</button></div>
           </div>
           <input id="otherSearch" class="search wide" type="search" placeholder="名前 所属 地域 タイトル メモで検索">
           <div id="otherList" class="card-list"></div>
@@ -167,6 +167,28 @@
     </div>
   </dialog>
 
+
+  <dialog id="saveDialog" class="save-dialog">
+    <div class="dialog-head">
+      <h3>保存方法</h3>
+      <button type="button" class="ghost-btn" id="saveCloseBtn">閉じる</button>
+    </div>
+    <div class="save-body">
+      <p class="notice">保存ファイルを作成します。PC版PMMで開くファイルとして保存してください。</p>
+      <div class="save-current">現在のファイル名：<strong id="saveCurrentName">pmm_data.json</strong></div>
+      <div class="save-actions">
+        <button type="button" id="saveSameBtn" class="primary-btn">同じ名前で保存</button>
+        <button type="button" id="saveRenameBtn" class="secondary-btn">名前を変えて保存</button>
+      </div>
+      <div id="saveRenameBox" class="save-rename-box hidden">
+        <label>保存ファイル名</label>
+        <input id="saveFileNameInput" type="text" value="pmm_data.json">
+        <button type="button" id="saveWithNameBtn" class="primary-btn">この名前で保存</button>
+      </div>
+      <p class="save-note">iPhoneやAndroidでは、保存時にブラウザ側の保存確認が出る場合があります。</p>
+    </div>
+  </dialog>
+
   <dialog id="infoDialog" class="info-dialog">
     <div class="dialog-head">
       <h3 id="infoTitle">情報</h3>
@@ -189,6 +211,6 @@
   </dialog>
 
   <div id="toast" class="toast"></div>
-  <script src="app.js?v=013"></script>
+  <script src="app.js?v=014"></script>
 </body>
 </html>
