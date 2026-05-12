@@ -15,7 +15,7 @@
         <img src="assets/icon-192.png" alt="PMM" class="brand-icon">
         <div>
           <div class="brand-title">PMM Pocket Web</div>
-          <div class="brand-sub">PMMスマホ版 v015</div>
+          <div class="brand-sub">PMMスマホ版 v016</div>
         </div>
       </div>
       <button id="darkToggle" class="ghost-btn" type="button" data-dark-toggle>ダーク</button>
@@ -26,7 +26,7 @@
         <div class="start-brand">
           <img src="assets/icon-192.png" alt="PMM" class="start-icon">
           <h1>PMM Pocket Web</h1>
-          <div class="start-version">PMMスマホ版 v015</div>
+          <div class="start-version">PMMスマホ版 v016</div>
         </div>
         <p class="notice">
           PC版PMMとWeb版で同じ保存ファイルを同時に編集すると 上書き事故の原因になります<br>
@@ -34,7 +34,7 @@
         </p>
         <div class="start-actions">
           <label class="primary-btn file-label">
-            JSON読込
+            保存ファイル読込
             <input id="fileInput" type="file" accept="application/json,.json" hidden>
           </label>
           <button id="newDataBtn" class="secondary-btn" type="button">空データ開始</button>
@@ -55,7 +55,7 @@
               <img src="assets/icon-192.png" alt="PMM" class="brand-icon">
               <div>
                 <div class="brand-title">PMM Pocket Web</div>
-                <div class="brand-sub">PMMスマホ版 v015</div>
+                <div class="brand-sub">PMMスマホ版 v016</div>
               </div>
             </div>
             <p class="notice small-notice">PC版PMMを閉じてから使ってください</p>
@@ -168,13 +168,31 @@
   </dialog>
 
 
+
+  <dialog id="readDialog" class="save-dialog read-dialog">
+    <div class="dialog-head">
+      <h3>保存ファイルの読み込み</h3>
+      <button type="button" class="ghost-btn" id="readCancelBtn">閉じる</button>
+    </div>
+    <div class="save-body">
+      <div class="save-current read-file-name">開くファイル：<strong id="readFileName">名称不明</strong></div>
+      <p class="notice">PC版PMMとPMM Pocket Webで同じ保存ファイルを同時に開くと、上書き事故の原因になります。</p>
+      <p class="save-note strong-note">PC版PMMを閉じてから読み込んでください。</p>
+      <div class="save-actions">
+        <button type="button" id="readOkBtn" class="primary-btn">読み込む</button>
+        <button type="button" id="readCancelBtn2" class="secondary-btn">キャンセル</button>
+      </div>
+    </div>
+  </dialog>
+
   <dialog id="saveDialog" class="save-dialog">
     <div class="dialog-head">
-      <h3>保存方法</h3>
+      <h3>保存ファイルの作成</h3>
       <button type="button" class="ghost-btn" id="saveCloseBtn">閉じる</button>
     </div>
     <div class="save-body">
-      <p class="notice">保存ファイルを作成します。PC版PMMで開くファイルとして保存してください。</p>
+      <p class="notice">PC版PMMで開くための保存ファイルを作ります。</p>
+      <p class="save-note strong-note">iPhoneやAndroidでは、次の画面で保存先を選べます。<br>ファイル / iCloud Drive / Googleドライブ などを選んで保存してください。</p>
       <div class="save-current">現在のファイル名：<strong id="saveCurrentName">pmm_data.json</strong></div>
       <div class="save-actions">
         <button type="button" id="saveSameBtn" class="primary-btn">同じ名前で保存</button>
@@ -185,7 +203,7 @@
         <input id="saveFileNameInput" type="text" value="pmm_data.json">
         <button type="button" id="saveWithNameBtn" class="primary-btn">この名前で保存</button>
       </div>
-      <p class="save-note">iPhoneやAndroidでは、保存時にブラウザ側の保存確認が出る場合があります。</p>
+      <p class="save-note">保存後、PC版PMMでこの保存ファイルを開いてください。</p>
     </div>
   </dialog>
 

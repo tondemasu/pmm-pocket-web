@@ -1,7 +1,7 @@
 'use strict';
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
-const APP_VERSION = 'PMM Pocket Web v015';
+const APP_VERSION = 'PMM Pocket Web v016';
 const state = { data:null, fileName:'pmm_data.json', fileHandle:null, dirty:false, edit:{type:null,id:null,index:null}, previewTarget:null, photoTarget:null, crop:{img:null,scale:1,rotation:0,dx:0,dy:0,drag:false,lastX:0,lastY:0} };
 const typeLabels = ['P','PS','K','KS','K（要フォロー）','KS（要フォロー）'];
 const titleOptions = ['','ONE','GM','PM','ECM','DCM','PDCM'];
@@ -27,8 +27,22 @@ function selfMemo(m){return firstVal(m,['activity_note','activity_memo','memo','
 function otherMemo(o){return firstVal(o,['note','memo','activity_note'])}
 function pendingMemo(p){return firstVal(p,['activity_memo','memo','note'])}
 
+let pendingReadFile = null;
 function openFileNotice(fileName){
-  alert(`保存ファイルの読み込み\n\n開くファイル：${fileName || '名称不明'}\n\nPC版PMMとPMM Pocket Webで同じ保存ファイルを同時に開くと 上書き事故の原因になります。\n\nPC版PMMを閉じてから読み込んでください。`);
+  return new Promise(resolve=>{
+    const d=$('#readDialog');
+    $('#readFileName').textContent=fileName || '名称不明';
+    const ok=$('#readOkBtn'), cancel=$('#readCancelBtn'), cancel2=$('#readCancelBtn2');
+    const cleanup=(result)=>{
+      ok.onclick=cancel.onclick=cancel2.onclick=null;
+      d.close();
+      resolve(result);
+    };
+    ok.onclick=()=>cleanup(true);
+    cancel.onclick=()=>cleanup(false);
+    cancel2.onclick=()=>cleanup(false);
+    d.showModal();
+  });
 }
 function otherShareText(o){
   const teams=[o.team,o.team2,o.team3].filter(Boolean).join(' / ') || '-';
@@ -247,14 +261,14 @@ function savePreviewMemo(){
   toast('メモを記入しました。最後に保存してください');
 }
 
-function showInfo(kind){const help=`<p><strong>使い方</strong></p><ol><li>PC版PMMを閉じます</li><li>保存ファイル読込でPMM保存ファイルを読み込みます</li><li>自メンバー活動管理や他メンバー辞書を編集します</li><li>最後に保存ボタンで保存ファイルを作成します</li><li>PC版PMMで保存したファイルを開きます</li></ol><p>このWeb版はデータをサーバーへ保存しません。読み込んだJSONはブラウザ内で処理します。</p>`;
+function showInfo(kind){const help=`<p><strong>使い方</strong></p><ol><li>PC版PMMを閉じます</li><li>保存ファイル読込でPMM保存ファイルを読み込みます</li><li>自メンバー活動管理や他メンバー辞書を編集します</li><li>最後に保存ボタンでPC版PMM用の保存ファイルを作成します</li><li>PC版PMMで保存したファイルを開きます</li></ol><p>このWeb版はデータをサーバーへ保存しません。読み込んだJSONはブラウザ内で処理します。</p>`;
  const about=`<p><strong>PMM Pocket Web</strong><br>${APP_VERSION}</p><p>PC版PMMで作成したJSONをスマホやPCブラウザで確認・編集する補助ツールです。</p><p>お問い合わせ先：兵藤 茂樹<br>LINE: https://line.me/ti/p/XJt7xbeJ1j</p>`;
  const ios=`<p><strong>iPhoneでホーム画面に追加</strong></p><ol><li>Safariでこのページを開きます</li><li>画面下または上の共有ボタンを押します</li><li><strong>ホーム画面に追加</strong>を選びます</li><li>追加を押すとアプリのように開けます</li></ol><p>Safari以外では表示が違う場合があります。</p>`;
  const android=`<p><strong>Androidでホーム画面に追加</strong></p><ol><li>Chromeでこのページを開きます</li><li>右上の︙メニューを押します</li><li><strong>ホーム画面に追加</strong> または <strong>アプリをインストール</strong> を選びます</li><li>追加を押すとアプリのように開けます</li></ol>`;
  const map={help:['ヘルプ',help],about:['このアプリについて',about],'install-ios':['iPhoneホーム追加',ios],'install-android':['Androidホーム追加',android]};
  const item=map[kind]||map.help; $('#infoTitle').textContent=item[0]; $('#infoBody').innerHTML=item[1]; $('#infoDialog').showModal(); }
 function init(){ if(localStorage.getItem('pmmPocketDark')==='1')document.body.classList.add('dark'); const toggleDark=()=>{document.body.classList.toggle('dark');localStorage.setItem('pmmPocketDark',document.body.classList.contains('dark')?'1':'0')}; $$('[data-dark-toggle]').forEach(btn=>btn.onclick=toggleDark);
- ['fileInput','fileInput2'].forEach(id=>{$('#'+id).onchange=e=>{const f=e.target.files[0]; if(!f)return; openFileNotice(f.name); readJsonFile(f); e.target.value='';}});
+ ['fileInput','fileInput2'].forEach(id=>{$('#'+id).onchange=async e=>{const f=e.target.files[0]; if(!f)return; const ok=await openFileNotice(f.name); if(ok) await readJsonFile(f); e.target.value='';}});
  $('#newDataBtn').onclick=()=>{state.data=emptyData();state.fileName='pmm_data.json';$('#loadedName').textContent=state.fileName;$('#startView').classList.add('hidden');$('#mainView').classList.remove('hidden');renderAll();markDirty(false)}; $('#saveBtn').onclick=writeJson;
  $$('.bottom-tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
  $('#selfSearch').oninput=renderSelf; $('#otherSearch').oninput=renderOther; const ps=$('#pendingSearch'); if(ps) ps.oninput=renderPending; $('#otherAddBtn').onclick=()=>openEdit('other-new'); const pa=$('#pendingAddBtn'); if(pa) pa.onclick=()=>openEdit('pending-new'); const sa=$('#selfAddBtn'); if(sa) sa.onclick=()=>openEdit('pending-new'); const ss=$('#selfSaveBtn'); if(ss) ss.onclick=writeJson; const os=$('#otherSaveBtn'); if(os) os.onclick=writeJson;

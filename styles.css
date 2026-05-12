@@ -181,3 +181,7 @@ body.dark .new-prefix{
 .edit-quick-actions{display:flex;justify-content:flex-end;margin:0 0 12px;gap:8px}
 .share-text{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;line-height:1.6;overflow:auto;max-height:55vh}
 .card-actions{gap:8px}
+
+.read-file-name{font-size:1.02rem;padding:.7rem .85rem;border:1px solid var(--line);border-radius:12px;background:var(--soft);}
+.strong-note{font-weight:700;color:var(--text);line-height:1.65;}
+.save-body .notice{line-height:1.65;}
