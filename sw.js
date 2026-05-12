@@ -1,5 +1,5 @@
-const CACHE='pmm-pocket-web-v023-20260512a';
-const ASSETS=['./','./index.html','./styles.css?v=022','./app.js?v=022','./manifest.webmanifest','./assets/icon-192.png','./assets/icon-512.png','./assets/pmm_logo.jpg'];
+const CACHE='pmm-pocket-web-v024-20260512a';
+const ASSETS=['./','./index.html','./styles.css?v=024','./app.js?v=024','./manifest.webmanifest','./assets/icon-192.png','./assets/icon-512.png','./assets/pmm_logo.jpg'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
