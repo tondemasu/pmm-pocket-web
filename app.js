@@ -1,7 +1,7 @@
 'use strict';
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
-const APP_VERSION = 'PMM Pocket Web v028';
+const APP_VERSION = 'PMM Pocket Web v029';
 const state = { data:null, fileName:'pmm_data.json', fileHandle:null, dirty:false, edit:{type:null,id:null,index:null}, previewTarget:null, photoTarget:null, crop:{img:null,scale:1,rotation:0,dx:0,dy:0,drag:false,lastX:0,lastY:0}, choice:{input:null,button:null,options:[]} };
 const typeLabels = ['P','PS','K','KS'];
 const titleOptions = ['','20p','50p','ONE','GM','PM','ECM','DCM','PDCM'];
@@ -14,7 +14,19 @@ const progressFlags = [
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
 async function forceUpdateApp(){try{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r=>r.unregister()));} if(window.caches){const ks=await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k)));} toast('最新版を読み込みます'); setTimeout(()=>{location.href=location.pathname+'?v=027&t='+Date.now();},350);}catch(e){location.href=location.pathname+'?v=027&t='+Date.now();}}
 function uid(){return (crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)).replace(/-/g,'')}
-function markDirty(v=true){state.dirty=v; $('#dirtyMark').textContent=v?'未保存':''}
+function updateFileStatus(){
+  const name = state.fileName || '未読込';
+  const shortName = name.length > 18 ? name.slice(0,8) + '…' + name.slice(-8) : name;
+  const gf = $('#globalFileName'), gs = $('#globalSaveState'), wrap = $('#globalFileStatus');
+  if(gf){ gf.textContent = shortName; gf.title = name; }
+  if(gs){ gs.textContent = state.dirty ? '未保存' : '保存済み'; }
+  if(wrap){ wrap.classList.toggle('dirty', !!state.dirty); wrap.classList.toggle('saved', !state.dirty); }
+  const dm = $('#dirtyMark');
+  if(dm){ dm.textContent = state.dirty ? '未保存' : '保存済み'; dm.classList.toggle('dirty', !!state.dirty); dm.classList.toggle('saved', !state.dirty); }
+  const ln = $('#loadedName');
+  if(ln){ ln.textContent = name; }
+}
+function markDirty(v=true){state.dirty=v; updateFileStatus()}
 function escapeHtml(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function photoSrc(b64){if(!b64)return ''; if(String(b64).startsWith('data:'))return b64; return 'data:image/jpeg;base64,'+b64}
 function stripDataUrl(s){return String(s||'').replace(/^data:image\/\w+;base64,/, '')}
