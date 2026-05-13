@@ -283,11 +283,11 @@ body.dark .choice-option.selected{background:rgba(99,179,237,.18);}
 .share-import-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media(max-width:520px){.share-import-actions{grid-template-columns:1fr}}
 
-/* v026 info/help links */
+/* v027 info/help links */
 .info-body a{color:var(--primary);font-weight:700;text-decoration:underline}.footer-links{flex-wrap:wrap}.helper-actions{align-items:center}
 
 
-/* v026: move helper links below home cards */
+/* v027: move helper links below home cards */
 .home-link-area{
   margin:16px 0 96px;
   padding:14px 12px;
@@ -309,7 +309,7 @@ body.dark .choice-option.selected{background:rgba(99,179,237,.18);}
 .choice-row input[type="hidden"]{display:none!important;}
 .choice-select-btn{appearance:none;-webkit-appearance:none;}
 
-/* v026 follow / warning / about logo */
+/* v027 follow / warning / about logo */
 .refresh-warning{margin:10px auto 12px;padding:10px 12px;border-radius:14px;background:rgba(247,201,72,.16);border:1px solid rgba(247,201,72,.35);color:var(--text);font-size:13px;line-height:1.55;max-width:640px;text-align:left}
 .follow-badge{display:inline-block;margin-left:6px;padding:2px 7px;border-radius:999px;background:rgba(247,201,72,.18);border:1px solid rgba(247,201,72,.45);font-size:12px;color:var(--text);vertical-align:middle}
 .follow-check-row{margin:2px 0 10px!important}.follow-check-row label{display:inline-flex;align-items:center;gap:7px;background:rgba(247,201,72,.10);border:1px solid rgba(247,201,72,.32);border-radius:999px;padding:6px 10px;margin-bottom:8px;font-size:14px;font-weight:700;line-height:1}.follow-check-row input[type="checkbox"]{width:18px!important;height:18px!important;min-width:18px;accent-color:var(--accent);margin:0}
@@ -319,7 +319,7 @@ body.dark .choice-option.selected{background:rgba(99,179,237,.18);}
 .bottom-tabs{grid-template-columns:repeat(4,1fr)!important}
 @media(max-width:640px){.about-logo{width:120px}.bottom-tab{font-size:13px;padding:9px 4px}.home-grid{margin-bottom:18px}}
 
-/* v026 refinements: edit save at top, compact follow check, title badges */
+/* v027 refinements: edit save at top, compact follow check, title badges */
 #editSaveTopBtn{display:inline-flex!important;}
 #editSaveBtn.hidden{display:none!important;}
 .follow-check-row{margin:4px 0 14px!important;}
@@ -339,6 +339,6 @@ body:not(.dark) .title-dcm{color:#831843;background:linear-gradient(180deg,#fce7
 body:not(.dark) .title-pdcm{color:#ffffff;background:linear-gradient(135deg,#bae6fd 0%,#38bdf8 35%,#2563eb 72%,#93c5fd 100%);border-color:#60a5fa;}
 
 
-/* v026: follow list and share import polish */
+/* v027: follow list and share import polish */
 .refresh-warning{font-weight:800;border:1px solid rgba(220,38,38,.22);background:rgba(220,38,38,.08);color:var(--text);border-radius:14px;padding:9px 12px;line-height:1.55;margin:12px auto;max-width:620px}
 .share-confirm-lead{font-weight:800;margin-top:0}.share-confirm-card{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0;line-height:1.8}.category-pill,.date-pill{display:inline-block;border-radius:999px;padding:2px 8px;font-size:12px;border:1px solid var(--line);background:rgba(15,76,129,.08);font-weight:800}.date-pill{background:rgba(247,201,72,.12);border-color:rgba(247,201,72,.35);margin-left:4px}.info-body ul,.info-body ol{padding-left:1.35em;line-height:1.8}.info-body li{margin:.2em 0}
