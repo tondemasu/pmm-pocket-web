@@ -1,7 +1,7 @@
 'use strict';
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
-const APP_VERSION = 'PMM Pocket Web v029';
+const APP_VERSION = 'PMM Pocket Web v030';
 const state = { data:null, fileName:'pmm_data.json', fileHandle:null, dirty:false, edit:{type:null,id:null,index:null}, previewTarget:null, photoTarget:null, crop:{img:null,scale:1,rotation:0,dx:0,dy:0,drag:false,lastX:0,lastY:0}, choice:{input:null,button:null,options:[]} };
 const typeLabels = ['P','PS','K','KS'];
 const titleOptions = ['','20p','50p','ONE','GM','PM','ECM','DCM','PDCM'];
@@ -290,13 +290,20 @@ function placeholderImage(name){
 }
 function makeAvatar(b64,name,large=false){const src=photoSrc(b64); if(src){return `<img class="avatar ${large?'large':''}" src="${src}" alt="" data-preview="${escapeHtml(src)}">`} return `<div class="avatar ${large?'large':''}" data-preview="">${escapeHtml((name||'?').slice(0,1))}</div>`}
 function typeTag(t){const cls=String(t||'').toLowerCase().replace(/[（）]/g,'');return `<span class="tag ${cls}">${escapeHtml(t||'-')}</span>`}
-function searchText(obj,keys){return keys.map(k=>obj?.[k]||'').join(' ').toLowerCase()}
+function normalizeSearchValue(v){
+  return String(v ?? '')
+    .normalize('NFKC')
+    .toLowerCase()
+    .replace(/[\s\u3000]+/g,'');
+}
+function searchText(obj,keys){return normalizeSearchValue(keys.map(k=>obj?.[k]||'').join(' '))}
+function searchQueryValue(v){return normalizeSearchValue(v)}
 function pointVal(obj, keys){return firstVal(obj, keys)}
 function pointSummary(obj){const l=pointVal(obj,['left','left_point','left_points','left_total','pmm_left']); const r=pointVal(obj,['right','right_point','right_points','right_total','pmm_right']); const cp=pointVal(obj,['cp','commission_point','commission_points','commission','pmm_cp']); const s=[]; if(l!=='')s.push('左'+escapeHtml(l)); if(r!=='')s.push('右'+escapeHtml(r)); if(cp!=='')s.push('CP'+escapeHtml(cp)); return s.length ? '<span class="point-summary">'+s.join('　')+'</span>' : ''}
 function titleBadge(role){const r=String(role||'').trim(); if(!r)return ''; const cls=r.toLowerCase(); if(['ONE','GM','PM','ECM','DCM','PDCM'].includes(r)) return `<span class="title-badge title-${cls}">${escapeHtml(r)}</span>`; return escapeHtml(r);}
 function titleMeta(parts){return parts.filter(Boolean).map(v=>{const r=String(v).trim(); return ['ONE','GM','PM','ECM','DCM','PDCM'].includes(r)?titleBadge(r):escapeHtml(r);}).join(' / ')}
 function renderSelf(){
-  const q=($('#selfSearch')?.value||'').trim().toLowerCase();
+  const q=searchQueryValue($('#selfSearch')?.value||'');
   const list=$('#selfList'); if(!list)return;
   const allowed=['P','PS','K（要フォロー）','KS（要フォロー）'];
   const pendingBase=(state.data?.pending_self_members||[]).map((p,idx)=>({...p,_idx:idx,_kind:'pending',_memo:pendingMemo(p)}));
@@ -312,7 +319,7 @@ function renderSelf(){
     return `<article class="member-card" data-self-id="${item.id}" data-preview-type="self" data-preview-id="${item.id}">${makeAvatar(item.photo_data,item.name)}<div class="card-main"><div class="card-title">${escapeHtml(item.name)} ${isFollowTarget(item)?'<span class="follow-badge">要フォロー</span>':''}</div><div class="card-meta">${escapeHtml([item.profile_region,item.profile_role].filter(Boolean).join(' / '))} ${pointSummary(item)}<br>${escapeHtml(item.activity_next_action||'')}${item.activity_next_date?' / '+escapeHtml(item.activity_next_date):''}</div></div><div class="card-actions"><button class="secondary-btn small" data-share-self="${item.id}">共有</button><button class="secondary-btn small" data-edit-self="${item.id}">編集</button></div></article>`;
   }).join('')||'<p class="notice">該当なし</p>';
 }
-function renderOther(){const q=($('#otherSearch')?.value||'').trim().toLowerCase(); const base=(state.data?.other_members||[]).map((o,idx)=>({...o,_idx:idx,_memo:otherMemo(o)})); const rows=base.filter(o=>!q||searchText(o,['name','team','team2','team3','role','region','gender','generation','note','memo','activity_last_contact','_memo']).includes(q)); $('#otherCount').textContent=`${rows.length}件`; $('#otherList').innerHTML=rows.map(o=>{const meta1=escapeHtml([o.team,o.team2,o.team3].filter(Boolean).join(' / ')||'-'); const meta2=titleMeta([o.role,o.region,o.gender,o.generation]); return `<article class="member-card" data-preview-type="other" data-preview-index="${o._idx}"><div data-preview-wrap>${makeAvatar(o.photo_data,o.name)}</div><div class="card-main"><div class="card-title">${escapeHtml(o.name)} ${isFollowTarget(o)?'<span class="follow-badge">要フォロー</span>':''}</div><div class="card-meta">${meta1}<br>${meta2}</div></div><div class="card-actions"><button class="secondary-btn small" data-share-other="${o._idx}">共有</button><button class="secondary-btn small" data-edit-other="${o._idx}">編集</button></div></article>`}).join('')||'<p class="notice">該当なし</p>'}
+function renderOther(){const q=searchQueryValue($('#otherSearch')?.value||''); const base=(state.data?.other_members||[]).map((o,idx)=>({...o,_idx:idx,_memo:otherMemo(o)})); const rows=base.filter(o=>!q||searchText(o,['name','team','team2','team3','role','region','gender','generation','note','memo','activity_last_contact','_memo']).includes(q)); $('#otherCount').textContent=`${rows.length}件`; $('#otherList').innerHTML=rows.map(o=>{const meta1=escapeHtml([o.team,o.team2,o.team3].filter(Boolean).join(' / ')||'-'); const meta2=titleMeta([o.role,o.region,o.gender,o.generation]); return `<article class="member-card" data-preview-type="other" data-preview-index="${o._idx}"><div data-preview-wrap>${makeAvatar(o.photo_data,o.name)}</div><div class="card-main"><div class="card-title">${escapeHtml(o.name)} ${isFollowTarget(o)?'<span class="follow-badge">要フォロー</span>':''}</div><div class="card-meta">${meta1}<br>${meta2}</div></div><div class="card-actions"><button class="secondary-btn small" data-share-other="${o._idx}">共有</button><button class="secondary-btn small" data-edit-other="${o._idx}">編集</button></div></article>`}).join('')||'<p class="notice">該当なし</p>'}
 function followDateValue(item){return String(item.activity_next_date||item.next_action_date||item.next_date||'').trim()}
 function followSortValue(item){
   const d=followDateValue(item);
