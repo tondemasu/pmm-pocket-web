@@ -1,4 +1,4 @@
-const CACHE='pmm-pocket-web-v025-20260512a';
+const CACHE='pmm-pocket-web-v026-20260512a';
 const ASSETS=['./','./index.html','./styles.css?v=024','./app.js?v=024','./manifest.webmanifest','./assets/icon-192.png','./assets/icon-512.png','./assets/pmm_logo.jpg'];
 
 self.addEventListener('install', event => {

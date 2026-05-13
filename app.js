@@ -1,7 +1,7 @@
 'use strict';
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
-const APP_VERSION = 'PMM Pocket Web v025';
+const APP_VERSION = 'PMM Pocket Web v026';
 const state = { data:null, fileName:'pmm_data.json', fileHandle:null, dirty:false, edit:{type:null,id:null,index:null}, previewTarget:null, photoTarget:null, crop:{img:null,scale:1,rotation:0,dx:0,dy:0,drag:false,lastX:0,lastY:0}, choice:{input:null,button:null,options:[]} };
 const typeLabels = ['P','PS','K','KS','K（要フォロー）','KS（要フォロー）'];
 const titleOptions = ['','20p','50p','ONE','GM','PM','ECM','DCM','PDCM'];
@@ -12,7 +12,7 @@ const progressFlags = [
   ['activity_flag_dreamlist','夢リスト'],['activity_flag_sevenbridge','センスオブブリッジ'],['activity_flag_listup','リストアップ'],['activity_flag_awpgrad','AWP卒業']
 ];
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
-async function forceUpdateApp(){try{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r=>r.unregister()));} if(window.caches){const ks=await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k)));} toast('最新版を読み込みます'); setTimeout(()=>{location.href=location.pathname+'?v=024&t='+Date.now();},350);}catch(e){location.href=location.pathname+'?v=024&t='+Date.now();}}
+async function forceUpdateApp(){try{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r=>r.unregister()));} if(window.caches){const ks=await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k)));} toast('最新版を読み込みます'); setTimeout(()=>{location.href=location.pathname+'?v=026&t='+Date.now();},350);}catch(e){location.href=location.pathname+'?v=026&t='+Date.now();}}
 function uid(){return (crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)).replace(/-/g,'')}
 function markDirty(v=true){state.dirty=v; $('#dirtyMark').textContent=v?'未保存':''}
 function escapeHtml(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
@@ -70,15 +70,30 @@ function memberSharePayload(kind, obj){
   Object.keys(payload).forEach(k=>{ if(payload[k]===undefined || payload[k]===null) payload[k]=''; });
   return payload;
 }
+function shareDisplayName(name){
+  return String(name||'メンバー').trim() || 'メンバー';
+}
+function shareFileBaseName(name){
+  return `${shareDisplayName(name)}_PMM個人データ`.replace(/[\\/:*?"<>|]/g,'_');
+}
 function shareTextFromPayload(payload){
-  return `${SHARE_START}
+  const name=shareDisplayName(payload?.name);
+  const summary=[payload?.title,payload?.area,payload?.gender,payload?.age].filter(Boolean).join(' / ') || '-';
+  return `【PMM個人データ：${name}】
+この文章を全文コピーして、PMM Pocket Webの「共有データ読込」に貼り付けてください。
+写真は含まれません。必要な場合は写真だけ別途共有してください。
+
+名前：${name}
+属性：${summary}
+
+${SHARE_START}
 ${JSON.stringify(payload)}
 ${SHARE_END}`;
 }
 async function sharePayload(payload){
   if(!payload){toast('共有する相手が見つかりません');return;}
   const text=shareTextFromPayload(payload);
-  const title=`PMM個人データ：${payload.name || 'メンバー'}`;
+  const title=shareFileBaseName(payload.name);
   try{
     if(navigator.share){
       await navigator.share({title, text});
@@ -88,7 +103,7 @@ async function sharePayload(payload){
       toast('共有テキストをコピーしました');
     }else{
       $('#infoTitle').textContent='共有テキスト';
-      $('#infoBody').innerHTML=`<p class="notice">この文章を全文コピーしてLINEやメールで送ってください。</p><pre class="share-text">${escapeHtml(text)}</pre>`;
+      $('#infoBody').innerHTML=`<p class="notice">この文章を全文コピーしてLINEやメールで送ってください。写真は含まれません。</p><pre class="share-text">${escapeHtml(text)}</pre>`;
       $('#infoDialog').showModal();
     }
   }catch(e){
@@ -135,7 +150,8 @@ async function pasteShareImportText(){
 function showShareImportConfirm(payload){
   pendingSharePayload=payload;
   const attrs=[payload.title,payload.area,payload.gender,payload.age].filter(Boolean).join(' / ') || '-';
-  $('#shareImportSummary').innerHTML=`<p>この共有データを保存しますか？</p><p><strong>名前：</strong>${escapeHtml(payload.name||'-')}<br><strong>所属：</strong>${escapeHtml(payload.group||'-')}<br><strong>属性：</strong>${escapeHtml(attrs)}</p><p class="notice">保存先を選んでください<br>※MAPには自動配置されません</p>`;
+  const follow=payload.follow ? '<span class="follow-badge">要フォロー</span>' : '';
+  $('#shareImportSummary').innerHTML=`<p class="share-confirm-lead">この共有データを保存しますか？</p><div class="share-confirm-card"><div><strong>名前：</strong>${escapeHtml(payload.name||'-')} ${follow}</div><div><strong>所属：</strong>${escapeHtml(payload.group||'-')}</div><div><strong>属性：</strong>${escapeHtml(attrs)}</div></div><p class="notice">保存先を選んでください。<br>通常は「つながりメンバーに保存」を選びます。<br>※この操作ではMAPに自動配置されません</p>`;
   $('#shareImportConfirmDialog').showModal();
 }
 function importSharedMember(dest){
@@ -160,7 +176,7 @@ async function sharePreviewPhoto(){
     const res=await fetch(dataUrl);
     const blob=await res.blob();
     const safe=String(obj?.name||'member').replace(/[\/:*?"<>|]/g,'_');
-    const file=new File([blob],`PMM_${safe}_photo.jpg`,{type:blob.type||'image/jpeg'});
+    const file=new File([blob],`${safe}_PMM写真.jpg`,{type:blob.type||'image/jpeg'});
     if(navigator.canShare && navigator.canShare({files:[file]})){
       await navigator.share({files:[file]});
       toast('写真共有を開きました');
@@ -276,7 +292,34 @@ function renderSelf(){
   }).join('')||'<p class="notice">該当なし</p>';
 }
 function renderOther(){const q=($('#otherSearch')?.value||'').trim().toLowerCase(); const base=(state.data?.other_members||[]).map((o,idx)=>({...o,_idx:idx,_memo:otherMemo(o)})); const rows=base.filter(o=>!q||searchText(o,['name','team','team2','team3','role','region','gender','generation','note','memo','_memo']).includes(q)); $('#otherCount').textContent=`${rows.length}件`; $('#otherList').innerHTML=rows.map(o=>{const meta1=escapeHtml([o.team,o.team2,o.team3].filter(Boolean).join(' / ')||'-'); const meta2=titleMeta([o.role,o.region,o.gender,o.generation]); return `<article class="member-card" data-preview-type="other" data-preview-index="${o._idx}"><div data-preview-wrap>${makeAvatar(o.photo_data,o.name)}</div><div class="card-main"><div class="card-title">${escapeHtml(o.name)} ${isFollowTarget(o)?'<span class="follow-badge">要フォロー</span>':''}</div><div class="card-meta">${meta1}<br>${meta2}</div></div><div class="card-actions"><button class="secondary-btn small" data-share-other="${o._idx}">共有</button><button class="secondary-btn small" data-edit-other="${o._idx}">編集</button></div></article>`}).join('')||'<p class="notice">該当なし</p>'}
-function renderFollow(){const list=$('#followList'); if(!list)return; const q=($('#followSearch')?.value||'').trim().toLowerCase(); const pending=(state.data?.pending_self_members||[]).map((p,idx)=>({...p,_idx:idx,_kind:'pending',_memo:pendingMemo(p),_category:'自MAP'})).filter(isFollowTarget); const self=membersArray().map(m=>({...m,_kind:'self',_memo:selfMemo(m),_category:'自MAP'})).filter(isFollowTarget); const other=(state.data?.other_members||[]).map((o,idx)=>({...o,_idx:idx,_kind:'other',_memo:otherMemo(o),_category:'つながり'})).filter(isFollowTarget); let rows=[...pending,...self,...other]; rows=rows.filter(x=>!q||searchText(x,['name','team','team2','team3','role','region','gender','generation','profile_region','profile_role','member_type','introducer_name','note','memo','activity_note','activity_memo','_memo']).includes(q)); $('#followCount').textContent=`${rows.length}件`; list.innerHTML=rows.map(item=>{ const meta=item._kind==='other' ? `${escapeHtml([item.team,item.team2,item.team3].filter(Boolean).join(' / ')||'-')}<br>${titleMeta([item.role,item.region,item.gender,item.generation])}` : `${escapeHtml(item.introducer_name||item.profile_region||item.region||'')} ${pointSummary(item)}<br>${escapeHtml(item.activity_next_action||item.next_action||'')}${(item.activity_next_date||item.next_action_date)?' / '+escapeHtml(item.activity_next_date||item.next_action_date):''}`; const action=item._kind==='other'?`<button class="secondary-btn small" data-edit-other="${item._idx}">編集</button>`:(item._kind==='pending'?`<button class="secondary-btn small" data-edit-pending="${item._idx}">編集</button>`:`<button class="secondary-btn small" data-edit-self="${item.id}">編集</button>`); const previewAttrs=item._kind==='self'?`data-preview-type="self" data-preview-id="${item.id}"`:`data-preview-type="${item._kind}" data-preview-index="${item._idx}"`; return `<article class="member-card" ${previewAttrs}>${makeAvatar(item.photo_data,item.name)}<div class="card-main"><div class="card-title">${escapeHtml(item.name||'未入力')} <span class="follow-badge">要フォロー</span></div><div class="card-meta">${item._category}メンバー<br>${meta}</div></div><div class="card-actions">${action}</div></article>`; }).join('')||'<p class="notice">要フォロー対象はありません</p>';}
+function followDateValue(item){return String(item.activity_next_date||item.next_action_date||item.next_date||'').trim()}
+function followSortValue(item){
+  const d=followDateValue(item);
+  const dateKey=d ? d : '9999-99-99';
+  const kindRank=item._kind==='pending'?0:(item._kind==='self'?1:2);
+  return `${dateKey}|${kindRank}|${item.name||''}`;
+}
+function renderFollow(){
+  const list=$('#followList'); if(!list)return;
+  const q=($('#followSearch')?.value||'').trim().toLowerCase();
+  const pending=(state.data?.pending_self_members||[]).map((p,idx)=>({...p,_idx:idx,_kind:'pending',_memo:pendingMemo(p),_category:'自MAP'})).filter(isFollowTarget);
+  const self=membersArray().map(m=>({...m,_kind:'self',_memo:selfMemo(m),_category:'自MAP'})).filter(isFollowTarget);
+  const other=(state.data?.other_members||[]).map((o,idx)=>({...o,_idx:idx,_kind:'other',_memo:otherMemo(o),_category:'つながり'})).filter(isFollowTarget);
+  let rows=[...pending,...self,...other];
+  rows=rows.filter(x=>!q||searchText(x,['name','team','team2','team3','role','region','gender','generation','profile_region','profile_role','member_type','introducer_name','note','memo','activity_note','activity_memo','_memo']).includes(q));
+  rows.sort((a,b)=>followSortValue(a).localeCompare(followSortValue(b),'ja'));
+  $('#followCount').textContent=`${rows.length}件`;
+  list.innerHTML=rows.map(item=>{
+    const date=followDateValue(item);
+    const meta=item._kind==='other'
+      ? `${escapeHtml([item.team,item.team2,item.team3].filter(Boolean).join(' / ')||'-')}<br>${titleMeta([item.role,item.region,item.gender,item.generation])}`
+      : `${escapeHtml(item.introducer_name||item.profile_region||item.region||'')} ${pointSummary(item)}<br>${escapeHtml(item.activity_next_action||item.next_action||'')}${date?' / '+escapeHtml(date):''}`;
+    const action=item._kind==='other'?`<button class="secondary-btn small" data-edit-other="${item._idx}">編集</button>`:(item._kind==='pending'?`<button class="secondary-btn small" data-edit-pending="${item._idx}">編集</button>`:`<button class="secondary-btn small" data-edit-self="${item.id}">編集</button>`);
+    const previewAttrs=item._kind==='self'?`data-preview-type="self" data-preview-id="${item.id}"`:`data-preview-type="${item._kind}" data-preview-index="${item._idx}"`;
+    return `<article class="member-card" ${previewAttrs}>${makeAvatar(item.photo_data,item.name)}<div class="card-main"><div class="card-title">${escapeHtml(item.name||'未入力')} <span class="follow-badge">要フォロー</span></div><div class="card-meta"><span class="category-pill">${item._category}</span>${date?` <span class="date-pill">${escapeHtml(date)}</span>`:''}<br>${meta}</div></div><div class="card-actions">${action}</div></article>`;
+  }).join('')||'<p class="notice">要フォロー対象はありません</p>';
+}
+
 function renderPending(){renderSelf()}
 function formInput(label,name,value='',type='text'){return `<div class="form-row"><label>${label}</label><input name="${name}" type="${type}" value="${escapeHtml(value)}"></div>`}
 function formText(label,name,value=''){return `<div class="form-row"><label>${label}</label><textarea name="${name}">${escapeHtml(value)}</textarea></div>`}
@@ -423,10 +466,10 @@ function savePreviewMemo(){
   toast('メモを記入しました。最後に保存してください');
 }
 
-function showInfo(kind){const help=`<p><strong>推奨環境</strong></p><ul><li>iPhoneは <strong>Safari</strong> でお使いください</li><li>Androidは <strong>Chrome</strong> でお使いください</li><li>スマホではホーム画面に追加して使うのがおすすめです</li></ul><p class="notice">ブラウザのまま使う場合、下スワイプや再読み込みでスタート画面に戻ることがあります。保存前に更新すると未保存内容が失われる場合があるため、こまめに保存してください。</p><p>iPhoneのChromeでは、保存ファイルが「このiPhone内 → Chrome」に入りやすく、iCloud Driveへ直接保存しにくい場合があります。iCloud Driveで管理したい場合はSafariでの利用をおすすめします。</p><p><strong>基本の使い方</strong></p><ol><li>PC版PMMを閉じます</li><li>保存ファイル読込でPMM保存ファイルを読み込みます</li><li>自MAPメンバー活動管理やつながりメンバー辞書を編集します</li><li>要フォローにチェックした人は「フォロー」画面でまとめて確認します</li><li>最後に保存ボタンでPC版PMM用の保存ファイルを作成します</li><li>PC版PMMで保存したファイルを開きます</li></ol><p>このWeb版はデータをサーバーへ保存しません。読み込んだJSONはブラウザ内で処理します。</p>`
- const about=`<div class="about-head"><div><p><strong>PMM Pocket Web</strong><br>${APP_VERSION}</p></div><img src="assets/pmm_logo.jpg" alt="PMMロゴ" class="about-logo"></div><p>PMM Pocket Webは、PC版PMMの補助として使う現場用ツールです。</p><p>PMM本体は、全体管理・MAP管理・ポイント計算・作戦立案を担当します。</p><p>Pocket Webは、現場で会ったメンバーの備忘録、写真、メモ、つながりメンバーの情報整理、要フォロー者の活動管理に特化します。</p><p>共有JSONに写真は含めません。写真は必要に応じて写真プレビューの「写真を共有」からLINE等で別送してください。</p><p>お問い合わせ先：兵藤 茂樹<br><a href="https://line.me/ti/p/XJt7xbeJ1j" target="_blank" rel="noopener">LINEで問い合わせる</a></p>`
- const downloads=`<p><strong>PC版PMMダウンロード</strong></p><p>現在準備中です。</p><ul><li>Windows版：準備中</li><li>Mac版：準備中</li></ul><p>公開後、この画面からダウンロード先を案内します。</p>`
- const ios=`<p><strong>スマホのホーム画面に追加</strong></p><p>iPhoneはSafariで開き、共有ボタンから「ホーム画面に追加」を選んでください。</p><p>AndroidはChromeで開き、メニューから「ホーム画面に追加」または「アプリをインストール」を選んでください。</p>`
+function showInfo(kind){const help=`<p><strong>推奨環境</strong></p><ul><li>iPhoneは <strong>Safari</strong> でお使いください</li><li>Androidは <strong>Chrome</strong> でお使いください</li><li>スマホではホーム画面に追加して使うのがおすすめです</li></ul><p class="notice strong-note">ブラウザのまま使う場合、下スワイプや再読み込みでスタート画面に戻ることがあります。保存前に更新すると未保存内容が失われる場合があるため、こまめに保存してください。</p><p>iPhoneのChromeでは、保存ファイルが「このiPhone内 → Chrome」に入りやすく、iCloud Driveへ直接保存しにくい場合があります。iCloud Driveで管理したい場合はSafariでの利用をおすすめします。</p><p><strong>基本の使い方</strong></p><ol><li>PC版PMMを閉じます</li><li>保存ファイル読込でPMM保存ファイルを読み込みます</li><li>現場で写真、メモ、要フォローを記録します</li><li>要フォローにチェックした人は「フォロー」画面でまとめて確認します</li><li>最後に保存ボタンで保存ファイルを作成します</li><li>PC版PMMで保存したファイルを開きます</li></ol><p><strong>PMM本体との役割分担</strong></p><ul><li>PMM本体：MAP管理、ポイント計算、作戦立案</li><li>Pocket Web：現場メモ、写真、要フォロー、共有データの受け渡し</li></ul><p>このWeb版はデータをサーバーへ保存しません。読み込んだJSONはブラウザ内で処理します。</p>`
+ const about=`<div class="about-head"><div><p><strong>PMM Pocket Web</strong><br>${APP_VERSION}</p></div><img src="assets/pmm_logo.jpg" alt="PMMロゴ" class="about-logo"></div><p>PMM Pocket Webは、PC版PMMの補助として使う現場用ツールです。</p><p>PMM本体は、全体管理・MAP管理・左右ポイントとCPの計算・作戦立案を担当します。</p><p>Pocket Webは、現場で会ったメンバーの備忘録、写真、メモ、つながりメンバーの情報整理、要フォロー者の活動管理に特化します。</p><p><strong>自MAPメンバー</strong>は、自分のMAP側で管理するメンバーです。PocketではPMM本体で算出された左・右・CPを表示します。</p><p><strong>つながりメンバー</strong>は、アップ、別系列、協力者、初対面メンバーなど、情報として保持したい人です。必要な人には要フォローを付けて活動管理できます。</p><p>共有JSONに写真は含めません。写真は必要に応じて写真プレビューの「写真を共有」からLINE等で別送してください。</p><p>お問い合わせ先：兵藤 茂樹<br><a href="https://line.me/ti/p/XJt7xbeJ1j" target="_blank" rel="noopener">LINEで問い合わせる</a></p>`
+ const downloads=`<p><strong>PC版PMMダウンロード</strong></p><p>現在準備中です。</p><ul><li>Windows版：準備中</li><li>Mac版：準備中</li></ul><p class="notice">公開後、ここにダウンロード先を掲載します。</p>`;
+ const ios=`<p><strong>iPhoneホーム追加</strong></p><p>Safariでこのページを開き、共有ボタンから「ホーム画面に追加」を選びます。</p><p class="notice">ホーム画面から起動すると、ブラウザの下スワイプ更新事故を減らせます。</p>`;
  const android=`<p><strong>Androidホーム追加</strong></p><p>AndroidはChromeで開き、メニューから「ホーム画面に追加」または「アプリをインストール」を選んでください。</p>`;
  const map={help:['ヘルプ',help],about:['このアプリについて',about],downloads:['PC版PMMダウンロード',downloads],'install-ios':['iPhoneホーム追加',ios],'install-android':['Androidホーム追加',android]};
  const item=map[kind]||map.help; $('#infoTitle').textContent=item[0]; $('#infoBody').innerHTML=item[1]; $('#infoDialog').showModal(); }
@@ -440,6 +483,6 @@ function init(){ if(localStorage.getItem('pmmPocketDark')==='1')document.body.cl
  document.addEventListener('click',e=>{ if(e.target?.id==='photoEditBtn')openPhoto(); if(e.target?.id==='photoRemoveBtn'){setCurrentPhoto(''); $('#editDialog').close(); toast('写真を削除しました。最後に保存してください')}});
  $('#closePhotoBtn').onclick=()=>$('#photoDialog').close(); $('#photoFileInput').onchange=e=>loadCropFile(e.target.files[0]); $('#photoCameraInput').onchange=e=>loadCropFile(e.target.files[0]); $('#rotatePhotoBtn').onclick=()=>{state.crop.rotation=(state.crop.rotation+90)%360;drawCrop()}; $('#clearPhotoBtn').onclick=()=>{setCurrentPhoto('');$('#photoDialog').close();$('#editDialog').close();toast('写真を削除しました。最後に保存してください')}; $('#applyPhotoBtn').onclick=applyPhoto; $('#zoomRange').oninput=e=>{state.crop.scale=Number(e.target.value);drawCrop()};
  const cw=$('.crop-wrap'); cw.addEventListener('pointerdown',e=>{state.crop.drag=true;state.crop.lastX=e.clientX;state.crop.lastY=e.clientY;cw.setPointerCapture(e.pointerId)}); cw.addEventListener('pointermove',e=>{if(!state.crop.drag)return;state.crop.dx+=e.clientX-state.crop.lastX;state.crop.dy+=e.clientY-state.crop.lastY;state.crop.lastX=e.clientX;state.crop.lastY=e.clientY;drawCrop()}); cw.addEventListener('pointerup',()=>state.crop.drag=false);
- if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=024').then(r=>r.update()).catch(()=>{})}
+ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=026').then(r=>r.update()).catch(()=>{})}
 }
 document.addEventListener('DOMContentLoaded',init);
