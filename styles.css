@@ -437,3 +437,31 @@ body:not(.dark) .title-pdcm{color:#ffffff;background:linear-gradient(135deg,#bae
 .download-card{display:grid;gap:10px;margin:12px 0}
 .download-card .primary-btn{width:100%;text-align:center}
 @media(max-width:560px){.date-action-row{grid-template-columns:1fr}.date-action-row .secondary-btn{width:100%}}
+
+/* v033: PC版PMMダウンロード表示の調整 */
+.download-card .download-btn,
+.download-card a.primary-btn.download-btn{
+  color:#071421 !important;
+  background:#63b8f4 !important;
+  border:1px solid rgba(255,255,255,.28) !important;
+  font-weight:900 !important;
+  letter-spacing:.02em;
+  min-height:54px;
+  padding:14px 16px;
+  text-align:center;
+  white-space:normal;
+  line-height:1.35;
+  box-shadow:0 8px 20px rgba(99,184,244,.18);
+}
+.download-card .download-btn:visited,
+.download-card a.primary-btn.download-btn:visited{color:#071421 !important;}
+.mobile-download-notice{
+  border:1px solid rgba(248,113,113,.35);
+  background:rgba(248,113,113,.10);
+  color:var(--text);
+  border-radius:16px;
+  padding:14px 16px;
+  line-height:1.7;
+  margin:10px 0 14px;
+}
+.mobile-download-notice strong{color:#fca5a5;}
