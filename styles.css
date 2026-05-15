@@ -429,3 +429,11 @@ body:not(.dark) .title-pdcm{color:#ffffff;background:linear-gradient(135deg,#bae
     font-size:11px;
   }
 }
+
+
+/* v031: date schedule buttons and PC download cards */
+.date-action-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+.date-action-row input{min-width:0}
+.download-card{display:grid;gap:10px;margin:12px 0}
+.download-card .primary-btn{width:100%;text-align:center}
+@media(max-width:560px){.date-action-row{grid-template-columns:1fr}.date-action-row .secondary-btn{width:100%}}
