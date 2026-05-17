@@ -1,7 +1,7 @@
 'use strict';
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
-const APP_VERSION = 'PMM Pocket Web v040';
+const APP_VERSION = 'PMM Pocket Web v041';
 const state = { data:null, fileName:'pmm_data.json', fileHandle:null, dirty:false, edit:{type:null,id:null,index:null}, previewTarget:null, photoTarget:null, crop:{img:null,scale:1,baseScale:1,zoom:1,rotation:0,dx:0,dy:0,drag:false,lastX:0,lastY:0}, choice:{input:null,button:null,options:[]}, editDraft:null };
 const typeLabels = ['P','PS','K','KS'];
 const titleOptions = ['','20p','50p','ONE','GM','PM','ECM','DCM','PDCM'];
@@ -501,9 +501,8 @@ function reopenEditDialogIfNeeded(){
   }
 }
 function openPhoto(){
-  // iPhone/Safariではdialogを重ねると、写真登録画面が編集画面の下に潜ることがある。
-  // 写真登録中だけ編集画面をいったん閉じ、写真画面を最前面のmodalとして開く。
-  // 入力中の内容は先に一時保持するので、写真画面を閉じると編集画面へ戻れる。
+  // v041: iPhone/Safariで<dialog>.show()相当になると、写真登録画面が通常DOMの位置（一番下）に張り付くことがある。
+  // 編集画面を一時的に閉じ、写真登録画面を強制的にfixed overlayとして扱う。
   syncEditFormToCurrentObj();
   state.photoTarget={...state.edit};
   const editDialog=$('#editDialog');
@@ -513,14 +512,23 @@ function openPhoto(){
   }
   resetCrop();
   const d=$('#photoDialog');
+  document.body.classList.add('photo-dialog-active');
   try{
-    if(!d.open)d.showModal();
+    if(d.open){ try{d.close();}catch(_){} }
+    d.showModal();
   }catch(e){
-    try{if(!d.open)d.show();}catch(_){}
+    // showModalが使えない/失敗する環境では、open属性＋CSSで疑似モーダル表示にする
+    d.setAttribute('open','');
   }
+  d.scrollTop = 0;
   drawCrop();
 }
 function resetCrop(){state.crop={img:null,scale:1,baseScale:1,zoom:1,rotation:0,dx:0,dy:0,drag:false,lastX:0,lastY:0}; $('#zoomRange').value=1}
+function closePhotoDialogOnly(){
+  const d=$('#photoDialog');
+  document.body.classList.remove('photo-dialog-active');
+  try{if(d.open)d.close();}catch(e){d.removeAttribute('open');}
+}
 function getCurrentObj(){const t=state.edit.type;if(t==='self')return state.data.members[state.edit.id]; if(t==='other')return state.data.other_members[state.edit.index]; if(t==='pending')return state.data.pending_self_members[state.edit.index]; if(t==='other-new'||t==='pending-new')return state.editDraft; return null}
 function setCurrentPhoto(b64){const obj=getCurrentObj(); if(obj){obj.photo_data=b64; markDirty(); renderAll(); updateEditPhotoPreview(b64, obj.name);}}
 function updateEditPhotoPreview(b64,name){
@@ -564,7 +572,7 @@ function applyPhoto(){
   const o=out.getContext('2d');
   o.drawImage(src,40,40,240,240,0,0,160,160);
   setCurrentPhoto(stripDataUrl(out.toDataURL('image/jpeg',0.72)));
-  $('#photoDialog').close();
+  closePhotoDialogOnly();
   reopenEditDialogIfNeeded();
   toast('写真を登録しました。続けてメンバー情報を保存してください');
 }
@@ -633,8 +641,8 @@ function init(){ if(localStorage.getItem('pmmPocketDark')==='1')document.body.cl
  document.body.addEventListener('click',e=>{const cb=e.target.closest('.choice-select-btn'); if(cb){openChoiceSheet(cb); return;} const sched=e.target.closest('[data-create-schedule]'); if(sched){createScheduleFromEdit(sched.dataset.createSchedule, sched.dataset.actionName); return;} const st=e.target.closest('[data-self-edit-tab]'); if(st){const name=st.dataset.selfEditTab; $$('.self-edit-tab').forEach(x=>x.classList.toggle('active',x.dataset.selfEditTab===name)); $$('.self-edit-pane').forEach(x=>x.classList.toggle('active',x.dataset.selfEditPane===name)); return;} const u=e.target.closest('[data-update-app]'); if(u) forceUpdateApp(); const p=e.target.closest('[data-preview]'); if(p) preview(p.dataset.preview, p); const s=e.target.closest('[data-edit-self]'); if(s)openEdit('self',s.dataset.editSelf); const sh=e.target.closest('[data-share-other]'); if(sh){shareOther(sh.dataset.shareOther); return;} const ssr=e.target.closest('[data-share-self]'); if(ssr){shareSelf(ssr.dataset.shareSelf); return;} const spr=e.target.closest('[data-share-pending]'); if(spr){sharePending(spr.dataset.sharePending); return;} const o=e.target.closest('[data-edit-other]'); if(o)openEdit('other',o.dataset.editOther); const pn=e.target.closest('[data-edit-pending]'); if(pn)openEdit('pending',pn.dataset.editPending); const j=e.target.closest('[data-tab-jump]'); if(j)switchTab(j.dataset.tabJump); const l=e.target.closest('[data-dialog]'); if(l)showInfo(l.dataset.dialog);});
  $('#closeEditBtn').onclick=()=>$('#editDialog').close(); const choiceClose=$('#choiceCloseBtn'); if(choiceClose) choiceClose.onclick=()=>$('#choiceDialog').close(); const choiceList=$('#choiceList'); if(choiceList) choiceList.onclick=e=>{const opt=e.target.closest('[data-choice-index]'); if(opt) chooseSheetValue(opt.dataset.choiceIndex);}; document.addEventListener('click',e=>{if(e.target?.id==='otherShareBtn' && state.edit.type?.includes('other')) shareOther(state.edit.index);}); $('#editSaveBtn').onclick=saveEdit; $('#editSaveTopBtn').onclick=saveEdit; $('#deleteBtn').onclick=deleteEdit; $('#closeInfoBtn').onclick=()=>$('#infoDialog').close(); $('#saveCloseBtn').onclick=()=>$('#saveDialog').close(); $('#saveSameBtn').onclick=async()=>{await downloadJsonAs(state.fileName); $('#saveDialog').close();}; $('#saveRenameBtn').onclick=()=>{$('#saveRenameBox').classList.remove('hidden'); $('#saveFileNameInput').focus();}; $('#saveWithNameBtn').onclick=async()=>{await downloadJsonAs($('#saveFileNameInput').value); $('#saveDialog').close();}; $('#closePreviewBtn').onclick=()=>$('#previewDialog').close(); $('#sharePreviewPhotoBtn').onclick=sharePreviewPhoto; $('#previewMemoSaveBtn').onclick=savePreviewMemo;
  document.addEventListener('click',e=>{ if(e.target?.id==='photoEditBtn')openPhoto(); if(e.target?.id==='photoRemoveBtn'){syncEditFormToCurrentObj(); setCurrentPhoto(''); reopenEditDialogIfNeeded(); toast('写真を削除しました。最後に保存してください')}});
- $('#closePhotoBtn').onclick=()=>{$('#photoDialog').close(); reopenEditDialogIfNeeded();}; $('#photoFileInput').onchange=e=>loadCropFile(e.target.files[0]); $('#photoCameraInput').onchange=e=>loadCropFile(e.target.files[0]); $('#rotatePhotoBtn').onclick=()=>{state.crop.rotation=(state.crop.rotation+90)%360;drawCrop()}; $('#clearPhotoBtn').onclick=()=>{syncEditFormToCurrentObj(); setCurrentPhoto(''); $('#photoDialog').close(); reopenEditDialogIfNeeded(); toast('写真を削除しました。最後に保存してください')}; $('#applyPhotoBtn').onclick=applyPhoto; $('#zoomRange').oninput=e=>{state.crop.zoom=Number(e.target.value)||1; state.crop.scale=state.crop.zoom; drawCrop()};
+ $('#closePhotoBtn').onclick=()=>{closePhotoDialogOnly(); reopenEditDialogIfNeeded();}; $('#photoFileInput').onchange=e=>loadCropFile(e.target.files[0]); $('#photoCameraInput').onchange=e=>loadCropFile(e.target.files[0]); $('#rotatePhotoBtn').onclick=()=>{state.crop.rotation=(state.crop.rotation+90)%360;drawCrop()}; $('#clearPhotoBtn').onclick=()=>{syncEditFormToCurrentObj(); setCurrentPhoto(''); closePhotoDialogOnly(); reopenEditDialogIfNeeded(); toast('写真を削除しました。最後に保存してください')}; $('#applyPhotoBtn').onclick=applyPhoto; $('#zoomRange').oninput=e=>{state.crop.zoom=Number(e.target.value)||1; state.crop.scale=state.crop.zoom; drawCrop()};
  const cw=$('.crop-wrap'); cw.addEventListener('pointerdown',e=>{state.crop.drag=true;state.crop.lastX=e.clientX;state.crop.lastY=e.clientY;cw.setPointerCapture(e.pointerId)}); cw.addEventListener('pointermove',e=>{if(!state.crop.drag)return;state.crop.dx+=e.clientX-state.crop.lastX;state.crop.dy+=e.clientY-state.crop.lastY;state.crop.lastX=e.clientX;state.crop.lastY=e.clientY;drawCrop()}); cw.addEventListener('pointerup',()=>state.crop.drag=false);
- if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=039').then(r=>r.update()).catch(()=>{})}
+ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=041').then(r=>r.update()).catch(()=>{})}
 }
 document.addEventListener('DOMContentLoaded',init);

@@ -465,3 +465,35 @@ body:not(.dark) .title-pdcm{color:#ffffff;background:linear-gradient(135deg,#bae
   margin:10px 0 14px;
 }
 .mobile-download-notice strong{color:#fca5a5;}
+
+
+/* v041 photo dialog layer fix: keep photo editor as real overlay even if browser falls back to non-modal dialog */
+.photo-dialog[open]{
+  position:fixed!important;
+  left:50%!important;
+  top:50%!important;
+  transform:translate(-50%,-50%)!important;
+  z-index:10020!important;
+  width:min(460px,96vw)!important;
+  max-width:min(460px,96vw)!important;
+  max-height:calc(100dvh - 24px)!important;
+  overflow:auto!important;
+  margin:0!important;
+  border-radius:22px!important;
+}
+.photo-dialog[open]::backdrop{background:rgba(0,0,0,.55)!important;}
+body.photo-dialog-active::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  z-index:10010;
+}
+@media(max-width:560px){
+  .photo-dialog[open]{
+    width:96vw!important;
+    top:calc(env(safe-area-inset-top) + 12px)!important;
+    transform:translateX(-50%)!important;
+    max-height:calc(100dvh - env(safe-area-inset-top) - 24px)!important;
+  }
+}
