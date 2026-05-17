@@ -1,7 +1,7 @@
 'use strict';
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
-const APP_VERSION = 'PMM Pocket Web v039';
+const APP_VERSION = 'PMM Pocket Web v040';
 const state = { data:null, fileName:'pmm_data.json', fileHandle:null, dirty:false, edit:{type:null,id:null,index:null}, previewTarget:null, photoTarget:null, crop:{img:null,scale:1,baseScale:1,zoom:1,rotation:0,dx:0,dy:0,drag:false,lastX:0,lastY:0}, choice:{input:null,button:null,options:[]}, editDraft:null };
 const typeLabels = ['P','PS','K','KS'];
 const titleOptions = ['','20p','50p','ONE','GM','PM','ECM','DCM','PDCM'];
@@ -496,14 +496,28 @@ function reopenEditDialogIfNeeded(){
   const d=$('#editDialog');
   if(d && !d.open && state.edit?.type){
     try{d.showModal();}catch(e){try{d.show();}catch(_){}}
+    const body=$('#editBody');
+    if(body && typeof state.editScrollTop === 'number') body.scrollTop = state.editScrollTop;
   }
 }
 function openPhoto(){
+  // iPhone/Safariではdialogを重ねると、写真登録画面が編集画面の下に潜ることがある。
+  // 写真登録中だけ編集画面をいったん閉じ、写真画面を最前面のmodalとして開く。
+  // 入力中の内容は先に一時保持するので、写真画面を閉じると編集画面へ戻れる。
   syncEditFormToCurrentObj();
   state.photoTarget={...state.edit};
+  const editDialog=$('#editDialog');
+  if(editDialog && editDialog.open){
+    state.editScrollTop = $('#editBody')?.scrollTop || 0;
+    try{editDialog.close();}catch(_){}
+  }
   resetCrop();
   const d=$('#photoDialog');
-  try{d.show();}catch(e){try{d.showModal();}catch(_){}}
+  try{
+    if(!d.open)d.showModal();
+  }catch(e){
+    try{if(!d.open)d.show();}catch(_){}
+  }
   drawCrop();
 }
 function resetCrop(){state.crop={img:null,scale:1,baseScale:1,zoom:1,rotation:0,dx:0,dy:0,drag:false,lastX:0,lastY:0}; $('#zoomRange').value=1}
