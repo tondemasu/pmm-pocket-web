@@ -1,7 +1,7 @@
 'use strict';
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
-const APP_VERSION = 'PMM Pocket Web v036';
+const APP_VERSION = 'PMM Pocket Web v037';
 const state = { data:null, fileName:'pmm_data.json', fileHandle:null, dirty:false, edit:{type:null,id:null,index:null}, previewTarget:null, photoTarget:null, crop:{img:null,scale:1,baseScale:1,zoom:1,rotation:0,dx:0,dy:0,drag:false,lastX:0,lastY:0}, choice:{input:null,button:null,options:[]} };
 const typeLabels = ['P','PS','K','KS'];
 const titleOptions = ['','20p','50p','ONE','GM','PM','ECM','DCM','PDCM'];
@@ -479,7 +479,29 @@ function openPhoto(){state.photoTarget={...state.edit}; resetCrop(); $('#photoDi
 function resetCrop(){state.crop={img:null,scale:1,baseScale:1,zoom:1,rotation:0,dx:0,dy:0,drag:false,lastX:0,lastY:0}; $('#zoomRange').value=1}
 function getCurrentObj(){const t=state.edit.type;if(t==='self')return state.data.members[state.edit.id]; if(t==='other')return state.data.other_members[state.edit.index]; if(t==='pending')return state.data.pending_self_members[state.edit.index]; return null}
 function setCurrentPhoto(b64){const obj=getCurrentObj(); if(obj){obj.photo_data=b64; markDirty(); renderAll();}}
-function loadCropFile(file){if(!file)return; const img=new Image(); img.onload=()=>{state.crop.img=img; const cropSize=240; state.crop.baseScale=Math.max(cropSize/img.width,cropSize/img.height); state.crop.zoom=1; state.crop.scale=1; $('#zoomRange').min=1; $('#zoomRange').max=6; $('#zoomRange').step=0.01; $('#zoomRange').value=1; state.crop.dx=0; state.crop.dy=0; drawCrop()}; img.src=URL.createObjectURL(file)}
+function loadCropFile(file){
+  if(!file)return;
+  const img=new Image();
+  img.onload=()=>{
+    state.crop.img=img;
+    // v037: スライダー左端は「赤枠」ではなく、編集エリア全体に元画像が収まる倍率にする。
+    // iPhone等の高解像度写真でも、まず全体を見てから顔へ寄せられるようにする。
+    const c=$('#cropCanvas');
+    const fitW=(c?.width||320)/img.width;
+    const fitH=(c?.height||320)/img.height;
+    state.crop.baseScale=Math.min(fitW,fitH);
+    state.crop.zoom=1;
+    state.crop.scale=1;
+    $('#zoomRange').min=1;
+    $('#zoomRange').max=8;
+    $('#zoomRange').step=0.01;
+    $('#zoomRange').value=1;
+    state.crop.dx=0;
+    state.crop.dy=0;
+    drawCrop();
+  };
+  img.src=URL.createObjectURL(file);
+}
 function drawCrop(){const c=$('#cropCanvas'),ctx=c.getContext('2d'),cr=state.crop; ctx.clearRect(0,0,c.width,c.height); ctx.fillStyle='#111';ctx.fillRect(0,0,c.width,c.height); if(!cr.img)return; const effectiveScale=(cr.baseScale||1)*(cr.zoom||1); ctx.save(); ctx.translate(c.width/2+cr.dx,c.height/2+cr.dy); ctx.rotate(cr.rotation*Math.PI/180); ctx.scale(effectiveScale,effectiveScale); ctx.drawImage(cr.img,-cr.img.width/2,-cr.img.height/2); ctx.restore()}
 function applyPhoto(){const src=$('#cropCanvas'); const out=document.createElement('canvas'); out.width=160; out.height=160; const o=out.getContext('2d'); o.drawImage(src,40,40,240,240,0,0,160,160); setCurrentPhoto(stripDataUrl(out.toDataURL('image/jpeg',0.72))); $('#photoDialog').close(); $('#editDialog').close(); toast('写真を記入しました。最後に保存してください')}
 function preview(src, triggerEl=null){
