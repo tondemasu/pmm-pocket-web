@@ -1,8 +1,8 @@
 'use strict';
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
-const APP_VERSION = 'PMM Pocket Web v037';
-const state = { data:null, fileName:'pmm_data.json', fileHandle:null, dirty:false, edit:{type:null,id:null,index:null}, previewTarget:null, photoTarget:null, crop:{img:null,scale:1,baseScale:1,zoom:1,rotation:0,dx:0,dy:0,drag:false,lastX:0,lastY:0}, choice:{input:null,button:null,options:[]} };
+const APP_VERSION = 'PMM Pocket Web v039';
+const state = { data:null, fileName:'pmm_data.json', fileHandle:null, dirty:false, edit:{type:null,id:null,index:null}, previewTarget:null, photoTarget:null, crop:{img:null,scale:1,baseScale:1,zoom:1,rotation:0,dx:0,dy:0,drag:false,lastX:0,lastY:0}, choice:{input:null,button:null,options:[]}, editDraft:null };
 const typeLabels = ['P','PS','K','KS'];
 const titleOptions = ['','20p','50p','ONE','GM','PM','ECM','DCM','PDCM'];
 const genderOptions = ['','男性','女性','その他'];
@@ -12,7 +12,7 @@ const progressFlags = [
   ['activity_flag_dreamlist','夢リスト'],['activity_flag_sevenbridge','センスオブブリッジ'],['activity_flag_listup','リストアップ'],['activity_flag_awpgrad','AWP卒業']
 ];
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
-async function forceUpdateApp(){try{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r=>r.unregister()));} if(window.caches){const ks=await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k)));} toast('最新版を読み込みます'); setTimeout(()=>{location.href=location.pathname+'?v=027&t='+Date.now();},350);}catch(e){location.href=location.pathname+'?v=027&t='+Date.now();}}
+async function forceUpdateApp(){try{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r=>r.unregister()));} if(window.caches){const ks=await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k)));} toast('最新版を読み込みます'); setTimeout(()=>{location.href=location.pathname+'?v=039&t='+Date.now();},350);}catch(e){location.href=location.pathname+'?v=039&t='+Date.now();}}
 function uid(){return (crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)).replace(/-/g,'')}
 function updateFileStatus(){
   const name = state.fileName || '未読込';
@@ -415,7 +415,7 @@ function chooseSheetValue(index){
 
 function progressHtml(obj){return `<div class="form-row"><label>進捗チェック</label><div class="checks">${progressFlags.map(([k,l])=>`<label><input type="checkbox" name="${k}" ${obj?.[k]?'checked':''}> ${l}</label>`).join('')}</div></div>`}
 function photoBlock(obj){return `<div class="photo-row">${makeAvatar(obj.photo_data,obj.name,true)}<div class="photo-actions">${followCheckHtml(obj)}<button type="button" class="secondary-btn small" id="photoEditBtn">写真登録</button><button type="button" class="danger-btn small" id="photoRemoveBtn">写真削除</button></div></div>`}
-function openEdit(type,idOrIndex){state.edit={type,id:null,index:null}; let obj={}; if(type==='self'){state.edit.id=idOrIndex; obj=state.data.members[idOrIndex]||{}} if(type==='other'){state.edit.index=Number(idOrIndex); obj=state.data.other_members[state.edit.index]||{}} if(type==='pending'){state.edit.index=Number(idOrIndex); obj=state.data.pending_self_members[state.edit.index]||{}} if(type==='other-new'){obj={id:uid(),name:''}} if(type==='pending-new'){obj={pending_id:uid(),name:'',member_type:'P',created_at:new Date().toISOString().slice(0,19)}}
+function openEdit(type,idOrIndex){state.edit={type,id:null,index:null}; state.editDraft=null; let obj={}; if(type==='self'){state.edit.id=idOrIndex; obj=state.data.members[idOrIndex]||{}} if(type==='other'){state.edit.index=Number(idOrIndex); obj=state.data.other_members[state.edit.index]||{}} if(type==='pending'){state.edit.index=Number(idOrIndex); obj=state.data.pending_self_members[state.edit.index]||{}} if(type==='other-new'){obj={id:uid(),name:''}; state.editDraft=obj;} if(type==='pending-new'){obj={pending_id:uid(),name:'',member_type:'P',created_at:new Date().toISOString().slice(0,19)}; state.editDraft=obj;}
   $('#editTitle').textContent= type.includes('other')?'つながりメンバー':type.includes('pending')?'新メンバー':'自MAPメンバー';
   $('#deleteBtn').classList.toggle('hidden', type.endsWith('new'));
   let html=photoBlock(obj);
@@ -427,7 +427,7 @@ function openEdit(type,idOrIndex){state.edit={type,id:null,index:null}; let obj=
   }
   $('#editBody').innerHTML=html; $('#editSaveTopBtn').classList.remove('hidden'); $('#editSaveBtn').classList.add('hidden'); $('#editDialog').showModal();
 }
-function saveEdit(){const fd=new FormData($('#editForm')); const type=state.edit.type; let obj={}; if(type==='self') obj=state.data.members[state.edit.id]; else if(type==='other') obj=state.data.other_members[state.edit.index]; else if(type==='pending') obj=state.data.pending_self_members[state.edit.index]; else obj={};
+function saveEdit(){const fd=new FormData($('#editForm')); const type=state.edit.type; let obj={}; if(type==='self') obj=state.data.members[state.edit.id]; else if(type==='other') obj=state.data.other_members[state.edit.index]; else if(type==='pending') obj=state.data.pending_self_members[state.edit.index]; else obj=state.editDraft || {};
   for(const [k,v] of fd.entries()) obj[k]=String(v);
   if(type==='self'){ setAliases(obj,['activity_note','activity_memo','memo','note'], obj.activity_note||''); setAliases(obj,['activity_last_contact','last_contact_date'], obj.activity_last_contact||''); setAliases(obj,['left','left_point','left_points','left_total','pmm_left'], obj.left||''); setAliases(obj,['right','right_point','right_points','right_total','pmm_right'], obj.right||''); setAliases(obj,['cp','commission_point','commission_points','commission','pmm_cp'], obj.cp||''); }
   if(type.includes('other')){ setAliases(obj,['activity_note','activity_memo','note','memo'], obj.activity_note||obj.note||''); setAliases(obj,['activity_last_contact','last_contact_date'], obj.activity_last_contact||''); setAliases(obj,['activity_promise','promise'], obj.activity_promise||''); setAliases(obj,['activity_next_action','next_action'], obj.activity_next_action||''); setAliases(obj,['activity_next_date','next_action_date'], obj.activity_next_date||''); setAliases(obj,['activity_event','event'], obj.activity_event||''); setAliases(obj,['activity_temperature','temperature'], obj.activity_temperature||''); }
@@ -436,6 +436,7 @@ function saveEdit(){const fd=new FormData($('#editForm')); const type=state.edit
   const followBox=$('#editBody').querySelector('[name="follow"]'); if(followBox) obj.follow=!!followBox.checked;
   if(type==='other-new'){ if(!obj.id)obj.id=uid(); state.data.other_members.push(obj); }
   if(type==='pending-new'){ if(!obj.pending_id)obj.pending_id=uid(); if(!obj.created_at)obj.created_at=new Date().toISOString().slice(0,19); obj.source='PMM Pocket Web'; state.data.pending_self_members.push(obj); }
+  state.editDraft=null;
   markDirty(); renderAll(); $('#editDialog').close(); toast('記入しました。最後に保存してください')
 }
 function editTargetName(){
@@ -475,10 +476,48 @@ async function deleteEdit(){
   }
   markDirty();renderAll();$('#editDialog').close();toast('削除しました。最後に保存してください')
 }
-function openPhoto(){state.photoTarget={...state.edit}; resetCrop(); $('#photoDialog').showModal(); drawCrop()}
+
+function syncEditFormToCurrentObj(){
+  const form=$('#editForm');
+  if(!form || !state.edit?.type)return;
+  let obj=getCurrentObj();
+  if(!obj && (state.edit.type==='other-new' || state.edit.type==='pending-new')){
+    obj={};
+    state.editDraft=obj;
+  }
+  if(!obj)return;
+  const fd=new FormData(form);
+  for(const [k,v] of fd.entries()) obj[k]=String(v);
+  progressFlags.forEach(([k])=>{const el=$('#editBody')?.querySelector(`[name="${k}"]`); if(el)obj[k]=!!el.checked;});
+  const followBox=$('#editBody')?.querySelector('[name="follow"]');
+  if(followBox)obj.follow=!!followBox.checked;
+}
+function reopenEditDialogIfNeeded(){
+  const d=$('#editDialog');
+  if(d && !d.open && state.edit?.type){
+    try{d.showModal();}catch(e){try{d.show();}catch(_){}}
+  }
+}
+function openPhoto(){
+  syncEditFormToCurrentObj();
+  state.photoTarget={...state.edit};
+  resetCrop();
+  const d=$('#photoDialog');
+  try{d.show();}catch(e){try{d.showModal();}catch(_){}}
+  drawCrop();
+}
 function resetCrop(){state.crop={img:null,scale:1,baseScale:1,zoom:1,rotation:0,dx:0,dy:0,drag:false,lastX:0,lastY:0}; $('#zoomRange').value=1}
-function getCurrentObj(){const t=state.edit.type;if(t==='self')return state.data.members[state.edit.id]; if(t==='other')return state.data.other_members[state.edit.index]; if(t==='pending')return state.data.pending_self_members[state.edit.index]; return null}
-function setCurrentPhoto(b64){const obj=getCurrentObj(); if(obj){obj.photo_data=b64; markDirty(); renderAll();}}
+function getCurrentObj(){const t=state.edit.type;if(t==='self')return state.data.members[state.edit.id]; if(t==='other')return state.data.other_members[state.edit.index]; if(t==='pending')return state.data.pending_self_members[state.edit.index]; if(t==='other-new'||t==='pending-new')return state.editDraft; return null}
+function setCurrentPhoto(b64){const obj=getCurrentObj(); if(obj){obj.photo_data=b64; markDirty(); renderAll(); updateEditPhotoPreview(b64, obj.name);}}
+function updateEditPhotoPreview(b64,name){
+  const row=$('#editBody .photo-row');
+  if(!row)return;
+  const old=row.querySelector('.avatar');
+  const wrapper=document.createElement('div');
+  wrapper.innerHTML=makeAvatar(b64,name,true);
+  const fresh=wrapper.firstElementChild;
+  if(old&&fresh) old.replaceWith(fresh);
+}
 function loadCropFile(file){
   if(!file)return;
   const img=new Image();
@@ -503,7 +542,18 @@ function loadCropFile(file){
   img.src=URL.createObjectURL(file);
 }
 function drawCrop(){const c=$('#cropCanvas'),ctx=c.getContext('2d'),cr=state.crop; ctx.clearRect(0,0,c.width,c.height); ctx.fillStyle='#111';ctx.fillRect(0,0,c.width,c.height); if(!cr.img)return; const effectiveScale=(cr.baseScale||1)*(cr.zoom||1); ctx.save(); ctx.translate(c.width/2+cr.dx,c.height/2+cr.dy); ctx.rotate(cr.rotation*Math.PI/180); ctx.scale(effectiveScale,effectiveScale); ctx.drawImage(cr.img,-cr.img.width/2,-cr.img.height/2); ctx.restore()}
-function applyPhoto(){const src=$('#cropCanvas'); const out=document.createElement('canvas'); out.width=160; out.height=160; const o=out.getContext('2d'); o.drawImage(src,40,40,240,240,0,0,160,160); setCurrentPhoto(stripDataUrl(out.toDataURL('image/jpeg',0.72))); $('#photoDialog').close(); $('#editDialog').close(); toast('写真を記入しました。最後に保存してください')}
+function applyPhoto(){
+  syncEditFormToCurrentObj();
+  const src=$('#cropCanvas');
+  const out=document.createElement('canvas');
+  out.width=160; out.height=160;
+  const o=out.getContext('2d');
+  o.drawImage(src,40,40,240,240,0,0,160,160);
+  setCurrentPhoto(stripDataUrl(out.toDataURL('image/jpeg',0.72)));
+  $('#photoDialog').close();
+  reopenEditDialogIfNeeded();
+  toast('写真を登録しました。続けてメンバー情報を保存してください');
+}
 function preview(src, triggerEl=null){
   const d=$('#previewDialog');
   state.previewTarget = getPreviewTarget(triggerEl);
@@ -568,9 +618,9 @@ function init(){ if(localStorage.getItem('pmmPocketDark')==='1')document.body.cl
  $('#selfSearch').oninput=renderSelf; $('#otherSearch').oninput=renderOther; const fs=$('#followSearch'); if(fs) fs.oninput=renderFollow; const ps=$('#pendingSearch'); if(ps) ps.oninput=renderPending; $('#otherAddBtn').onclick=()=>openEdit('other-new'); const pa=$('#pendingAddBtn'); if(pa) pa.onclick=()=>openEdit('pending-new'); const sa=$('#selfAddBtn'); if(sa) sa.onclick=()=>openEdit('pending-new'); const ss=$('#selfSaveBtn'); if(ss) ss.onclick=writeJson; const os=$('#otherSaveBtn'); if(os) os.onclick=writeJson; const fsb=$('#followSaveBtn'); if(fsb) fsb.onclick=writeJson;
  document.body.addEventListener('click',e=>{const cb=e.target.closest('.choice-select-btn'); if(cb){openChoiceSheet(cb); return;} const sched=e.target.closest('[data-create-schedule]'); if(sched){createScheduleFromEdit(sched.dataset.createSchedule, sched.dataset.actionName); return;} const st=e.target.closest('[data-self-edit-tab]'); if(st){const name=st.dataset.selfEditTab; $$('.self-edit-tab').forEach(x=>x.classList.toggle('active',x.dataset.selfEditTab===name)); $$('.self-edit-pane').forEach(x=>x.classList.toggle('active',x.dataset.selfEditPane===name)); return;} const u=e.target.closest('[data-update-app]'); if(u) forceUpdateApp(); const p=e.target.closest('[data-preview]'); if(p) preview(p.dataset.preview, p); const s=e.target.closest('[data-edit-self]'); if(s)openEdit('self',s.dataset.editSelf); const sh=e.target.closest('[data-share-other]'); if(sh){shareOther(sh.dataset.shareOther); return;} const ssr=e.target.closest('[data-share-self]'); if(ssr){shareSelf(ssr.dataset.shareSelf); return;} const spr=e.target.closest('[data-share-pending]'); if(spr){sharePending(spr.dataset.sharePending); return;} const o=e.target.closest('[data-edit-other]'); if(o)openEdit('other',o.dataset.editOther); const pn=e.target.closest('[data-edit-pending]'); if(pn)openEdit('pending',pn.dataset.editPending); const j=e.target.closest('[data-tab-jump]'); if(j)switchTab(j.dataset.tabJump); const l=e.target.closest('[data-dialog]'); if(l)showInfo(l.dataset.dialog);});
  $('#closeEditBtn').onclick=()=>$('#editDialog').close(); const choiceClose=$('#choiceCloseBtn'); if(choiceClose) choiceClose.onclick=()=>$('#choiceDialog').close(); const choiceList=$('#choiceList'); if(choiceList) choiceList.onclick=e=>{const opt=e.target.closest('[data-choice-index]'); if(opt) chooseSheetValue(opt.dataset.choiceIndex);}; document.addEventListener('click',e=>{if(e.target?.id==='otherShareBtn' && state.edit.type?.includes('other')) shareOther(state.edit.index);}); $('#editSaveBtn').onclick=saveEdit; $('#editSaveTopBtn').onclick=saveEdit; $('#deleteBtn').onclick=deleteEdit; $('#closeInfoBtn').onclick=()=>$('#infoDialog').close(); $('#saveCloseBtn').onclick=()=>$('#saveDialog').close(); $('#saveSameBtn').onclick=async()=>{await downloadJsonAs(state.fileName); $('#saveDialog').close();}; $('#saveRenameBtn').onclick=()=>{$('#saveRenameBox').classList.remove('hidden'); $('#saveFileNameInput').focus();}; $('#saveWithNameBtn').onclick=async()=>{await downloadJsonAs($('#saveFileNameInput').value); $('#saveDialog').close();}; $('#closePreviewBtn').onclick=()=>$('#previewDialog').close(); $('#sharePreviewPhotoBtn').onclick=sharePreviewPhoto; $('#previewMemoSaveBtn').onclick=savePreviewMemo;
- document.addEventListener('click',e=>{ if(e.target?.id==='photoEditBtn')openPhoto(); if(e.target?.id==='photoRemoveBtn'){setCurrentPhoto(''); toast('写真を削除しました。最後に保存してください')}});
- $('#closePhotoBtn').onclick=()=>$('#photoDialog').close(); $('#photoFileInput').onchange=e=>loadCropFile(e.target.files[0]); $('#photoCameraInput').onchange=e=>loadCropFile(e.target.files[0]); $('#rotatePhotoBtn').onclick=()=>{state.crop.rotation=(state.crop.rotation+90)%360;drawCrop()}; $('#clearPhotoBtn').onclick=()=>{setCurrentPhoto('');$('#photoDialog').close();toast('写真を削除しました。最後に保存してください')}; $('#applyPhotoBtn').onclick=applyPhoto; $('#zoomRange').oninput=e=>{state.crop.zoom=Number(e.target.value)||1; state.crop.scale=state.crop.zoom; drawCrop()};
+ document.addEventListener('click',e=>{ if(e.target?.id==='photoEditBtn')openPhoto(); if(e.target?.id==='photoRemoveBtn'){syncEditFormToCurrentObj(); setCurrentPhoto(''); reopenEditDialogIfNeeded(); toast('写真を削除しました。最後に保存してください')}});
+ $('#closePhotoBtn').onclick=()=>{$('#photoDialog').close(); reopenEditDialogIfNeeded();}; $('#photoFileInput').onchange=e=>loadCropFile(e.target.files[0]); $('#photoCameraInput').onchange=e=>loadCropFile(e.target.files[0]); $('#rotatePhotoBtn').onclick=()=>{state.crop.rotation=(state.crop.rotation+90)%360;drawCrop()}; $('#clearPhotoBtn').onclick=()=>{syncEditFormToCurrentObj(); setCurrentPhoto(''); $('#photoDialog').close(); reopenEditDialogIfNeeded(); toast('写真を削除しました。最後に保存してください')}; $('#applyPhotoBtn').onclick=applyPhoto; $('#zoomRange').oninput=e=>{state.crop.zoom=Number(e.target.value)||1; state.crop.scale=state.crop.zoom; drawCrop()};
  const cw=$('.crop-wrap'); cw.addEventListener('pointerdown',e=>{state.crop.drag=true;state.crop.lastX=e.clientX;state.crop.lastY=e.clientY;cw.setPointerCapture(e.pointerId)}); cw.addEventListener('pointermove',e=>{if(!state.crop.drag)return;state.crop.dx+=e.clientX-state.crop.lastX;state.crop.dy+=e.clientY-state.crop.lastY;state.crop.lastX=e.clientX;state.crop.lastY=e.clientY;drawCrop()}); cw.addEventListener('pointerup',()=>state.crop.drag=false);
- if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=034').then(r=>r.update()).catch(()=>{})}
+ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=039').then(r=>r.update()).catch(()=>{})}
 }
 document.addEventListener('DOMContentLoaded',init);
