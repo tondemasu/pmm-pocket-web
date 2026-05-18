@@ -1,7 +1,7 @@
 'use strict';
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
-const APP_VERSION = 'PMM Pocket Web v042';
+const APP_VERSION = 'PMM Pocket Web v043';
 const state = { data:null, fileName:'pmm_data.json', fileHandle:null, dirty:false, edit:{type:null,id:null,index:null}, previewTarget:null, photoTarget:null, crop:{img:null,scale:1,baseScale:1,zoom:1,rotation:0,dx:0,dy:0,drag:false,lastX:0,lastY:0}, choice:{input:null,button:null,options:[]}, editDraft:null };
 const typeLabels = ['P','PS','K','KS'];
 const titleOptions = ['','20p','50p','ONE','GM','PM','ECM','DCM','PDCM'];
@@ -274,8 +274,10 @@ async function writeJson(){openSaveDialog()}
 function renderAll(){renderSelf();renderOther();renderPending();renderFollow(); updateHomeCounts();}
 
 function countSelfAll(){
-  const allowed=['P','PS','K','KS','K（要フォロー）','KS（要フォロー）'];
-  const normal = membersArray().filter(m=>allowed.includes(m.member_type||'')).length;
+  // 自MAPトップ件数は、自MAP一覧に実際に表示される対象だけを数える。
+  // K / KS や退会済み枠まで含めると、一覧件数とズレて不安を招くため除外する。
+  const visibleTypes=['P','PS','K（要フォロー）','KS（要フォロー）'];
+  const normal = membersArray().filter(m=>visibleTypes.includes(m.member_type||'')).length;
   const pending = Array.isArray(state.data?.pending_self_members) ? state.data.pending_self_members.filter(p=>!p.removed && !p.deleted).length : 0;
   return normal + pending;
 }
@@ -644,7 +646,7 @@ function savePreviewMemo(){
 function isMobileDevice(){return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent||'') || (window.matchMedia && window.matchMedia('(max-width: 760px)').matches);}
 function showInfo(kind){const help=`<p><strong>推奨環境</strong></p><ul><li>iPhoneは <strong>Safari</strong> でお使いください</li><li>Androidは <strong>Chrome</strong> でお使いください</li><li>スマホではホーム画面に追加して使うのがおすすめです</li></ul><p class="notice strong-note">ブラウザのまま使う場合、下スワイプや再読み込みでスタート画面に戻ることがあります。保存前に更新すると未保存内容が失われる場合があるため、こまめに保存してください。</p><p>iPhoneのChromeでは、保存ファイルが「このiPhone内 → Chrome」に入りやすく、iCloud Driveへ直接保存しにくい場合があります。iCloud Driveで管理したい場合はSafariでの利用をおすすめします。</p><p><strong>個人情報の取り扱い</strong></p><p>PMM Pocket Webでは氏名 写真 メモ 活動管理情報など、個人に関する情報を扱う場合があります。メンバー情報は保存ファイルに記録されます。保存ファイルの送信 共有 保管には十分注意してください。</p><p>PMM Pocket Webがメンバー情報を運営側に自動送信する仕組みではありません。ただし、JSONファイルをLINE メール クラウド共有などで送った場合は、送信先や保管先で情報が扱われます。</p><p>一人分の共有データには写真を含めません。写真を共有する場合は、写真プレビューからスマホ標準共有で別途送信してください。</p><p><strong>基本の使い方</strong></p><ol><li>PC版PMMを閉じます</li><li>保存ファイル読込でPMM保存ファイルを読み込みます</li><li>現場で写真、メモ、要フォローを記録します</li><li>要フォローにチェックした人は「フォロー」画面でまとめて確認します</li><li>最後に保存ボタンで保存ファイルを作成します</li><li>PC版PMMで保存したファイルを開きます</li></ol><p><strong>PMM本体との役割分担</strong></p><ul><li>PMM本体：MAP管理、ポイント計算、作戦立案</li><li>Pocket Web：現場メモ、写真、要フォロー、共有データの受け渡し</li></ul><p><strong>自MAPメンバー表示について</strong></p><ul><li>自MAP一覧では P / PS / K / KS の種別表示は控えめにしています</li><li>フォロー対象として見る人は、種別ではなく「要フォロー」チェックで管理します</li><li>過去データの K（要フォロー）/ KS（要フォロー）は読み込み時に要フォロー扱いにします</li></ul><p>このWeb版はデータをサーバーへ保存しません。読み込んだJSONはブラウザ内で処理します。</p>`
  const about=`<div class="about-head"><div><p><strong>PMM Pocket Web</strong><br>${APP_VERSION}</p></div><img src="assets/pmm_logo.jpg" alt="PMMロゴ" class="about-logo"></div><p>PMM Pocket Webは、PC版PMMの補助として使う現場用ツールです。</p><p>PMM本体は、全体管理・MAP管理・左右ポイントとCPの計算・作戦立案を担当します。</p><p>Pocket Webは、現場で会ったメンバーの備忘録、写真、メモ、つながりメンバーの情報整理、要フォロー者の活動管理に特化します。</p><p><strong>自MAPメンバー</strong>は、自分のMAP側で管理するメンバーです。PocketではPMM本体で算出された左・右・CPを表示します。</p><p><strong>つながりメンバー</strong>は、アップ、別系列、協力者、初対面メンバーなど、情報として保持したい人です。必要な人には要フォローを付けて活動管理できます。</p><p>共有JSONに写真は含めません。写真は必要に応じて写真プレビューの「写真を共有」からLINE等で別送してください。</p><p class="notice strong-note">このアプリはメンバー情報を扱います。保存ファイルの送信 共有 保管には十分注意してください。</p><p>お問い合わせ先：兵藤 茂樹<br><a href="https://line.me/ti/p/XJt7xbeJ1j" target="_blank" rel="noopener">LINEで問い合わせる</a></p>`
- const downloads = isMobileDevice() ? `<div class="mobile-download-notice"><p><strong>PC版ダウンロードはスマホではできません。</strong></p><p>PMM本体はWindows / Mac用のPCアプリです。ダウンロードと起動はパソコンで行ってください。</p><p>このスマホでは、PMM Pocket Webをホーム画面に追加してお使いください。</p></div><p class="notice">同じJSONをPMM本体とPocket Webで同時に編集しないでください。</p>` : `<p><strong>PC版PMMダウンロード</strong></p><p>PMM本体は、MAP管理・ポイント計算・印刷HTML出力を行うPC用アプリです。</p><div class="download-card"><a class="primary-btn download-btn" href="https://github.com/tondemasu/pmm-pocket-web/releases/download/pmm-v112/PMM_v112_Win.zip" target="_blank" rel="noopener">Windows版 PMM v112 をダウンロード</a><a class="primary-btn download-btn" href="https://github.com/tondemasu/pmm-pocket-web/releases/download/pmm-v112/PMM_v112_Mac.zip" target="_blank" rel="noopener">Mac版 PMM v112 をダウンロード</a></div><p class="notice">Macで初回起動できない場合は、PMM.appを右クリックまたはcontrolクリックして「開く」を選択してください。</p><p class="notice">同じJSONをPMM本体とPocket Webで同時に編集しないでください。</p>`;
+ const downloads = isMobileDevice() ? `<div class="mobile-download-notice"><p><strong>PC版ダウンロードはスマホではできません。</strong></p><p>PMM本体はWindows / Mac用のPCアプリです。ダウンロードと起動はパソコンで行ってください。</p><p>このスマホでは、PMM Pocket Webをホーム画面に追加してお使いください。</p></div><p class="notice">同じJSONをPMM本体とPocket Webで同時に編集しないでください。</p>` : `<p><strong>PC版PMMダウンロード</strong></p><p>PMM本体は、MAP管理・ポイント計算・印刷HTML出力を行うPC用アプリです。</p><div class="download-card"><a class="primary-btn download-btn" href="https://github.com/tondemasu/pmm-pocket-web/releases/download/pmm-v115/PMM_Win_v115.zip" target="_blank" rel="noopener">Windows版 PMM v115 をダウンロード</a><a class="primary-btn download-btn" href="https://github.com/tondemasu/pmm-pocket-web/releases/download/pmm-v115/PMM_Mac_v115.zip" target="_blank" rel="noopener">Mac版 PMM v115 をダウンロード</a></div><p class="notice">Macで初回起動できない場合は、PMM.appを右クリックまたはcontrolクリックして「開く」を選択してください。</p><p class="notice">同じJSONをPMM本体とPocket Webで同時に編集しないでください。</p>`;
  const ios=`<p><strong>iPhoneホーム追加</strong></p><p>Safariでこのページを開き、共有ボタンから「ホーム画面に追加」を選びます。</p><p class="notice">ホーム画面から起動すると、ブラウザの下スワイプ更新事故を減らせます。</p>`;
  const android=`<p><strong>Androidホーム追加</strong></p><p>AndroidはChromeで開き、メニューから「ホーム画面に追加」または「アプリをインストール」を選んでください。</p>`;
  const map={help:['ヘルプ',help],about:['このアプリについて',about],downloads:['PC版PMMダウンロード',downloads],'install-ios':['iPhoneホーム追加',ios],'install-android':['Androidホーム追加',android]};
