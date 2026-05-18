@@ -1,7 +1,7 @@
 'use strict';
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
-const APP_VERSION = 'PMM Pocket Web v041';
+const APP_VERSION = 'PMM Pocket Web v042';
 const state = { data:null, fileName:'pmm_data.json', fileHandle:null, dirty:false, edit:{type:null,id:null,index:null}, previewTarget:null, photoTarget:null, crop:{img:null,scale:1,baseScale:1,zoom:1,rotation:0,dx:0,dy:0,drag:false,lastX:0,lastY:0}, choice:{input:null,button:null,options:[]}, editDraft:null };
 const typeLabels = ['P','PS','K','KS'];
 const titleOptions = ['','20p','50p','ONE','GM','PM','ECM','DCM','PDCM'];
@@ -12,7 +12,7 @@ const progressFlags = [
   ['activity_flag_dreamlist','夢リスト'],['activity_flag_sevenbridge','センスオブブリッジ'],['activity_flag_listup','リストアップ'],['activity_flag_awpgrad','AWP卒業']
 ];
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
-async function forceUpdateApp(){try{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r=>r.unregister()));} if(window.caches){const ks=await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k)));} toast('最新版を読み込みます'); setTimeout(()=>{location.href=location.pathname+'?v=039&t='+Date.now();},350);}catch(e){location.href=location.pathname+'?v=039&t='+Date.now();}}
+async function forceUpdateApp(){try{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r=>r.unregister()));} if(window.caches){const ks=await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k)));} toast('最新版を読み込みます'); setTimeout(()=>{location.href=location.pathname+'?v=042&t='+Date.now();},350);}catch(e){location.href=location.pathname+'?v=042&t='+Date.now();}}
 function uid(){return (crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)).replace(/-/g,'')}
 function updateFileStatus(){
   const name = state.fileName || '未読込';
@@ -259,6 +259,7 @@ async function downloadJsonAs(fileName){
   state.fileName=name;
   $('#loadedName').textContent=state.fileName;
   markDirty(false);
+  updateHomeCounts();
   toast('保存ファイルを作成しました');
 }
 function openSaveDialog(){
@@ -272,11 +273,26 @@ function openSaveDialog(){
 async function writeJson(){openSaveDialog()}
 function renderAll(){renderSelf();renderOther();renderPending();renderFollow(); updateHomeCounts();}
 
+function countSelfAll(){
+  const allowed=['P','PS','K','KS','K（要フォロー）','KS（要フォロー）'];
+  const normal = membersArray().filter(m=>allowed.includes(m.member_type||'')).length;
+  const pending = Array.isArray(state.data?.pending_self_members) ? state.data.pending_self_members.filter(p=>!p.removed && !p.deleted).length : 0;
+  return normal + pending;
+}
+function countOtherAll(){
+  return Array.isArray(state.data?.other_members) ? state.data.other_members.filter(o=>!o.removed && !o.deleted).length : 0;
+}
+function countFollowAll(){
+  const pending = Array.isArray(state.data?.pending_self_members) ? state.data.pending_self_members.filter(p=>!p.removed && !p.deleted && isFollowTarget(p)).length : 0;
+  const self = membersArray().filter(isFollowTarget).length;
+  const other = Array.isArray(state.data?.other_members) ? state.data.other_members.filter(o=>!o.removed && !o.deleted && isFollowTarget(o)).length : 0;
+  return pending + self + other;
+}
 function updateHomeCounts(){
-  const selfEl=$('#homeSelfCount'), otherEl=$('#homeOtherCount');
-  if(selfEl) selfEl.textContent = ($('#selfCount')?.textContent||'0件').replace('件','') || '0';
-  if(otherEl) otherEl.textContent = ($('#otherCount')?.textContent||'0件').replace('件','') || '0';
-  const followEl=$('#homeFollowCount'); if(followEl) followEl.textContent = ($('#followCount')?.textContent||'0件').replace('件','') || '0';
+  const selfEl=$('#homeSelfCount'), otherEl=$('#homeOtherCount'), followEl=$('#homeFollowCount');
+  if(selfEl) selfEl.textContent = String(countSelfAll());
+  if(otherEl) otherEl.textContent = String(countOtherAll());
+  if(followEl) followEl.textContent = String(countFollowAll());
 }
 function switchTab(name){
   $$('.bottom-tab').forEach(x=>x.classList.toggle('active', x.dataset.tab===name));
